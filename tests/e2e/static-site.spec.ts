@@ -76,7 +76,9 @@ test("el modo WhatsApp no promete pagos, seguimiento ni pedidos en línea", asyn
 
 test("solo se muestran precios confirmados (los mismos de los datos estructurados)", async ({ page }) => {
   await page.goto("./");
-  const json = await page.locator('script[type="application/ld+json"]').first().textContent();
+  // Sin NEXT_PUBLIC_SITE_URL no hay datos estructurados: entonces no puede haber precios visibles.
+  const ld = page.locator('script[type="application/ld+json"]');
+  const json = (await ld.count()) ? await ld.first().textContent() : null;
   const graph = (JSON.parse(json ?? "{}")["@graph"] ?? []) as { "@type": string; offers?: { sku: string; price: number }[] }[];
   const offers = new Map(graph.flatMap((item) => item.offers ?? []).map((offer) => [offer.sku, offer.price]));
 
