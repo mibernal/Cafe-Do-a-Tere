@@ -138,6 +138,30 @@ test("la molienda se elige de forma explícita y se conserva hasta WhatsApp", as
   expect(errors).toEqual([]);
 });
 
+test("la finca y cada café muestran variedades, clasificación y altura", async ({ page }) => {
+  await page.goto("./");
+  const facts = page.locator(".origin-facts");
+  await expect(facts).toContainText("Castillo 60% · Caturra 40%");
+  await expect(facts).toContainText("Excelso");
+  await expect(facts).toContainText("1.450–1.650 m s. n. m.");
+
+  const cards = page.locator(".product-card");
+  const total = await cards.count();
+  for (let index = 0; index < total; index++) {
+    const card = cards.nth(index);
+    await card.scrollIntoViewIfNeeded();
+    await card.locator("h3 button").click();
+    const dialog = page.locator(".product-dialog-body");
+    await expect(dialog).toContainText("Castillo 60% · Caturra 40%");
+    await expect(dialog).toContainText("1.450–1.650 m s. n. m.");
+    await page.keyboard.press("Escape");
+    await expect(dialog).not.toBeVisible();
+  }
+
+  await page.getByText("¿Qué variedades cultivan?").click();
+  await expect(page.locator(".faq-answer").filter({ hasText: "Cenicafé" })).toContainText("60% Castillo y 40% Caturra");
+});
+
 test("la bolsa vacía orienta y se puede cerrar con teclado", async ({ page }) => {
   await page.goto("./");
   await page.locator(".bag-button").click();

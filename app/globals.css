@@ -1866,6 +1866,10 @@ legend {
   line-height: 1.3;
 }
 
+.origin-facts .origin-fact-wide {
+  grid-column: 1 / -1;
+}
+
 /* ------------------------------------------------------------- Cómo comprar */
 
 .howto {
@@ -1977,6 +1981,10 @@ legend {
   padding: 0 0 22px;
   color: var(--ink-soft);
   max-width: 44em;
+}
+
+.faq-answer p + p {
+  margin-top: 10px;
 }
 
 .faq-points {

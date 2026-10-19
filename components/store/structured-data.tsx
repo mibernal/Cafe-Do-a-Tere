@@ -1,5 +1,5 @@
 import type { Product } from "@/lib/store-types";
-import { logoSrc, site } from "@/lib/site";
+import { logoSrc, site, varietiesLabel } from "@/lib/site";
 
 function siteUrl() {
   try {
@@ -49,6 +49,16 @@ export function StructuredData({ products }: { products: Product[] }) {
         url: `${base}#cafe-${product.id}`,
         seller: { "@id": `${base}#organizacion` },
       }));
+    const fromFarm = product.origin.startsWith(site.farm);
+    const properties = [
+      ["Origen", product.origin],
+      ["Altura", /por confirmar/i.test(product.altitude) ? "" : product.altitude],
+      ["Especie", fromFarm ? site.species : ""],
+      ["Variedades", fromFarm ? varietiesLabel : ""],
+      ["Clasificación", fromFarm ? site.grade : ""],
+    ]
+      .filter(([, value]) => value)
+      .map(([name, value]) => ({ "@type": "PropertyValue", name, value }));
     return {
       "@type": "Product",
       "@id": `${base}#cafe-${product.id}`,
@@ -57,6 +67,7 @@ export function StructuredData({ products }: { products: Product[] }) {
       image: absolute(product.image),
       category: "Café tostado",
       brand: { "@type": "Brand", name: site.name },
+      additionalProperty: properties,
       ...(offers.length ? { offers } : {}),
     };
   });
