@@ -17,11 +17,15 @@ const PACKS = [
   ...["honey-red", "honey-black", "lavado", "natural"].flatMap((coffee) =>
     [250, 500].flatMap((weight) => [`${coffee}-${weight}`, `${coffee}-${weight}-beans`]),
   ),
+  "honey-red-340",
+  "honey-red-340-beans",
 ];
 
 const LABEL_TO_PACK: Record<string, string> = Object.fromEntries(
   PACKS.map((name) => [`/assets/cafe-${name}-front.jpg`, `/assets/pack-${name}.png`]),
 );
+
+const KNOWN_PACKS = new Set(Object.values(LABEL_TO_PACK));
 
 /** Ruta de la bolsa para una etiqueta conocida; cualquier otra ruta no cambia. */
 export function packFor(path: string) {
@@ -40,6 +44,8 @@ export function packFor(path: string) {
  */
 export const ILLUSTRATIVE_PACKS = new Set([
   "pack-precision-250.png",
+  "pack-honey-red-340.png",
+  "pack-honey-red-340-beans.png",
   ...["honey-red", "honey-black", "lavado", "natural"].flatMap((coffee) =>
     [250, 500].flatMap((weight) => [`pack-${coffee}-${weight}.png`, `pack-${coffee}-${weight}-beans.png`]),
   ),
@@ -88,8 +94,6 @@ export function packMatches(src: string, variant: { weightGrams: number; label: 
   return weight === variant.weightGrams && (!labelGrams || Number(labelGrams[1]) === weight);
 }
 
-const KNOWN_PACKS = new Set(Object.values(LABEL_TO_PACK));
-
 /**
  * Bolsa en grano que acompaña a una bolsa molida del mismo café y peso, si
  * existe. Sirve para variantes que venden "En grano" pero aún no tienen
@@ -98,4 +102,18 @@ const KNOWN_PACKS = new Set(Object.values(LABEL_TO_PACK));
 export function beansPackFor(pack: string) {
   const candidate = pack.replace(/(?:-ground)?\.png$/, "-beans.png");
   return candidate !== pack && KNOWN_PACKS.has(candidate) ? candidate : null;
+}
+
+/**
+ * La bolsa del mismo café y molienda para otro peso, si existe; si no, la
+ * misma ruta. Sirve para una presentación que en la base todavía apunta a la
+ * etiqueta de otro peso (p. ej. Honey Red 340 g con la de 250 g).
+ */
+export function packForWeight(pack: string, weight: number) {
+  const candidate = pack.replace(/-\d+((?:-ground|-beans)?\.png)$/, `-${weight}$1`);
+  if (KNOWN_PACKS.has(candidate)) return candidate;
+  const plain = candidate.replace(/-ground\.png$/, ".png");
+  if (KNOWN_PACKS.has(plain)) return plain;
+  const ground = candidate.replace(/(-\d+)\.png$/, "$1-ground.png");
+  return KNOWN_PACKS.has(ground) ? ground : pack;
 }

@@ -170,11 +170,19 @@ def rounded_mask(h, w, r):
     return m
 
 
+def bag_scale(weight):
+    """Tamaño relativo de la bolsa: 250 g → 0,84 y 500 g → 1,0; otros pesos
+    se interpolan según la raíz cúbica del peso (el volumen crece con el peso)."""
+    lo, hi = 250 ** (1 / 3), 500 ** (1 / 3)
+    t = (weight ** (1 / 3) - lo) / (hi - lo)
+    return float(np.clip(0.84 + t * 0.16, 0.72, 1.0))
+
+
 def render(label_name, out_name, weight):
     label = cv2.imread(str(ASSETS / label_name))
     if label is None:
         raise SystemExit(f"No se encontró {label_name}")
-    scale = 1.0 if weight >= 500 else 0.84
+    scale = bag_scale(weight)
     x0, y0, bw, bh = bag_geometry(scale)
     mask, seal = silhouette(bw, bh)
     shade = shading(bw, bh, seal)
@@ -259,6 +267,8 @@ for coffee in ["honey-red", "honey-black", "lavado", "natural"]:
     for weight in (250, 500):
         PACKS.append((f"cafe-{coffee}-{weight}-front.jpg", weight))
         PACKS.append((f"cafe-{coffee}-{weight}-beans-front.jpg", weight))
+# Honey Red 340 g (etiqueta creada con weight.py desde la de 250 g).
+PACKS += [("cafe-honey-red-340-front.jpg", 340), ("cafe-honey-red-340-beans-front.jpg", 340)]
 
 if __name__ == "__main__":
     only = sys.argv[2:] or None

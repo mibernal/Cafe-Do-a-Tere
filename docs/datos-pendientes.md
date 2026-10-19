@@ -60,6 +60,7 @@ Las etiquetas de Tostado a la leña (250 g, 500 g molido y 500 g en grano) y de 
 | Etiqueta ilustrativa | De dónde sale |
 |---|---|
 | `cafe-precision-250-front.jpg` | Tostión de precisión 500 g con el peso de 250 g |
+| `cafe-honey-red-340-front.jpg`, `cafe-honey-red-340-beans-front.jpg` | Honey Red 250 g con el peso de 340 g |
 | `cafe-honey-red-*`, `cafe-honey-black-*`, `cafe-lavado-*`, `cafe-natural-*` (250 g y 500 g) | Etiqueta de Tostión de precisión con la cinta del proceso |
 | `cafe-*-beans-front.jpg` de esos cafés | La anterior con el ícono, la celda y el pie «en grano» de la etiqueta original de Tostado a la leña 500 g en grano |
 
