@@ -105,6 +105,14 @@ export async function readJsonBody(
 }
 
 export function trustedClientAddress(request: Request) {
+  // Algunos hostings entregan la IP real en un encabezado propio que el
+  // cliente no puede falsificar (Netlify: x-nf-client-connection-ip). Solo se
+  // usa si el operador lo declara en CLIENT_IP_HEADER para ese hosting.
+  const platformHeader = process.env.CLIENT_IP_HEADER?.trim().toLowerCase();
+  if (platformHeader && /^[a-z0-9-]+$/.test(platformHeader)) {
+    const address = request.headers.get(platformHeader)?.trim();
+    if (address && isIP(address)) return address;
+  }
   // The deployment proxy must overwrite/append this header with the connecting
   // client address. Use the final hop rather than a caller-controlled X-Real-IP.
   const forwarded = request.headers

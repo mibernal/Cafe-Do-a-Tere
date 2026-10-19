@@ -2,6 +2,7 @@ import "server-only";
 import { hasDatabaseConfig } from "@/lib/supabase/admin";
 import type { CheckoutOptions } from "@/lib/store-types";
 import { isStaticSite } from "@/lib/site-target";
+import { legalComplete } from "@/lib/legal";
 
 const DEFAULT_COD_MAX_COP = 300_000;
 
@@ -59,6 +60,8 @@ export function getStoreReadiness(): CheckoutOptions {
   const baseReady =
     process.env.STORE_CHECKOUT_ENABLED === "true" &&
     privacyPolicyVersion() !== null &&
+    // Sin responsable identificado ni condiciones completas no se cobra en línea.
+    legalComplete() &&
     siteUrlIsValid() &&
     hasDatabaseConfig() &&
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);

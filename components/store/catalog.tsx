@@ -7,11 +7,10 @@ import { MessageCircle, PackageSearch, X } from "lucide-react";
 import type { Product } from "@/lib/store-types";
 import { categoryFilters, productBand, bandVars } from "@/lib/catalog-style";
 import { whatsappLink, logoSrc } from "@/lib/site";
-import { countCoffees } from "@/lib/coffee-profiles";
+import { coffeeProfile, countCoffees } from "@/lib/coffee-profiles";
 import { notesPhrase } from "@/lib/grind-options";
 import { ProductPurchase, resolveSelection, type Selection } from "@/components/store/product-purchase";
 import { useStore } from "@/components/store/store-provider";
-import { isStaticSite } from "@/lib/site-target";
 
 function isLabelArt(src: string) {
   return src.endsWith("-front.jpg");
@@ -55,7 +54,8 @@ function ProductCard({
       className={highlighted ? "product-card is-highlighted" : "product-card"}
       style={bandVars(product)}
     >
-      <button type="button" className="product-visual" onClick={onOpen} aria-label={`Ver detalles de ${product.name}`}>
+      <button type="button" className="product-visual" onClick={onOpen}>
+        <span className="sr-only">Ver detalles de {product.name}</span>
         <ProductVisual product={product} image={image} sizes="(max-width: 700px) 92vw, (max-width: 1100px) 45vw, 360px" />
         {product.badge && <span className="product-badge">{product.badge}</span>}
         {variant.lowStock && variant.available && <span className="stock-chip">Quedan pocas</span>}
@@ -127,14 +127,24 @@ function ProductDialog({
                 <dt>Origen</dt>
                 <dd>{product.origin}</dd>
               </div>
-              <div>
-                <dt>Proceso</dt>
-                <dd>{product.process}</dd>
-              </div>
-              <div>
-                <dt>Altura</dt>
-                <dd>{product.altitude}</dd>
-              </div>
+              {coffeeProfile(product).roast && (
+                <div>
+                  <dt>Tostión</dt>
+                  <dd>{coffeeProfile(product).roast}</dd>
+                </div>
+              )}
+              {coffeeProfile(product).postHarvest && (
+                <div>
+                  <dt>Proceso</dt>
+                  <dd>{coffeeProfile(product).postHarvest}</dd>
+                </div>
+              )}
+              {product.altitude && !/por confirmar/i.test(product.altitude) && (
+                <div>
+                  <dt>Altura</dt>
+                  <dd>{product.altitude}</dd>
+                </div>
+              )}
               <div>
                 <dt>En taza</dt>
                 <dd>{notesPhrase(product.notes)}</dd>
@@ -176,6 +186,20 @@ export function Catalog() {
             </p>
           </div>
         </header>
+
+        {!options.ordersEnabled && products.length > 0 && (
+          <ol className="buy-steps" aria-label="Cómo pedir">
+            <li>
+              <b>Elige</b> café, presentación y molienda.
+            </li>
+            <li>
+              <b>Agrégalo a tu bolsa</b>: puedes llevar varios cafés.
+            </li>
+            <li>
+              <b>Envía la bolsa por WhatsApp</b>: confirmamos precio, domicilio y pago contigo. Esta página no cobra.
+            </li>
+          </ol>
+        )}
 
         {pendingOrder && (
           <div className="pending-order" role="status">
@@ -236,7 +260,7 @@ export function Catalog() {
               />
             ))}
             {filter === "all" && products.length > 1 && (
-              <aside className="catalog-tile" aria-label="Ayuda para elegir">
+              <div className="catalog-tile" role="group" aria-label="Ayuda para elegir">
                 <Image src={logoSrc} alt="" width={84} height={84} />
                 <div className="tile-text">
                   <h3>¿Te ayudamos a elegir?</h3>
@@ -257,7 +281,7 @@ export function Catalog() {
                     Comparar cafés
                   </a>
                 </div>
-              </aside>
+              </div>
             )}
           </div>
         )}
@@ -266,9 +290,7 @@ export function Catalog() {
           <p className="price-disclosure">
             {options.ordersEnabled
               ? "Los cafés con precio por confirmar se piden por WhatsApp mientras la finca define su lote. Los demás se pagan aquí mismo."
-              : isStaticSite
-                ? "Tu bolsa se envía por WhatsApp y confirmamos contigo precio, disponibilidad y domicilio antes de cobrar."
-                : "Mientras habilitamos el pago en línea, tu bolsa se envía por WhatsApp y confirmamos contigo precio, disponibilidad y domicilio antes de cobrar."}
+              : "«Precio por confirmar» significa que la finca aún no lo ha fijado para este lote: agrégalo a tu bolsa y te lo confirmamos por WhatsApp antes de cobrar."}
           </p>
         )}
       </div>

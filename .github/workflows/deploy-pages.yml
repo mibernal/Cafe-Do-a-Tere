@@ -61,6 +61,11 @@ jobs:
           NEXT_PUBLIC_WHATSAPP_NUMBER: ${{ vars.NEXT_PUBLIC_WHATSAPP_NUMBER }}
           NEXT_PUBLIC_CONTACT_EMAIL: ${{ vars.NEXT_PUBLIC_CONTACT_EMAIL }}
           NEXT_PUBLIC_INSTAGRAM_URL: ${{ vars.NEXT_PUBLIC_INSTAGRAM_URL }}
+          # Datos públicos del responsable para /terminos y /privacidad.
+          BUSINESS_LEGAL_NAME: ${{ vars.BUSINESS_LEGAL_NAME }}
+          BUSINESS_TAX_ID: ${{ vars.BUSINESS_TAX_ID }}
+          BUSINESS_ADDRESS: ${{ vars.BUSINESS_ADDRESS }}
+          BUSINESS_LEGAL_EMAIL: ${{ vars.BUSINESS_LEGAL_EMAIL }}
         run: npm run build:pages
       - name: Navegador para las pruebas
         run: npx playwright install --with-deps chromium

@@ -6,7 +6,7 @@ import { Check, RotateCcw } from "lucide-react";
 import type { Product } from "@/lib/store-types";
 import { GRIND_OPTIONS } from "@/lib/grind-options";
 import { bandVars } from "@/lib/catalog-style";
-import { coffeeProfile, drinkOptions, rankCoffees, tasteOptions, type Answers } from "@/lib/coffee-profiles";
+import { drinkOptions, rankCoffees, tasteOptions, type Answers } from "@/lib/coffee-profiles";
 import { ProductPurchase, resolveSelection, type Selection } from "@/components/store/product-purchase";
 import { isPurchasable, useStore } from "@/components/store/store-provider";
 import { logoSrc } from "@/lib/site";
@@ -26,12 +26,9 @@ function defaultSelection(product: Product, method: string | undefined, ordersEn
     product.variants.find(sellable) ??
     product.variants[0];
   if (!variant) return undefined;
-  // Sin método elegido, la molienda sugerida es donde ese café mejor se expresa.
-  const grind =
-    (method && variant.grinds.includes(method) ? method : undefined) ??
-    coffeeProfile(product).methods.find((item) => variant.grinds.includes(item)) ??
-    variant.grinds[0];
-  return { variantId: variant.id, grind };
+  // La molienda solo se precarga cuando el comprador dijo cómo prepara su
+  // café; si no, la elige él en la ficha.
+  return { variantId: variant.id, grind: method && variant.grinds.includes(method) ? method : "" };
 }
 
 function ChoiceGroup<T extends string>({
@@ -164,7 +161,7 @@ export function FlavorFinder() {
                 </ul>
                 {grindMissing && (
                   <p className="suggestion-note">
-                    Esta presentación no viene en esa molienda; te dejamos la más cercana disponible.
+                    Este café no viene en esa molienda: elige otra o pídelo en grano.
                   </p>
                 )}
                 <ProductPurchase

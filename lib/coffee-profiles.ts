@@ -2,9 +2,11 @@ import type { Product, ProductCategory } from "@/lib/store-types";
 import { methodPhrase } from "@/lib/grind-options";
 
 /**
- * Perfil de taza de cada café en una escala de referencia de 1 a 5. Alimenta
- * la comparación y el asistente "Ayúdame a elegir". Ajusta los valores aquí si
- * la finca catalogó distinto un lote; un café sin perfil usa el de su categoría.
+ * Perfil de taza de cada café en una escala orientativa de 1 a 5, definida
+ * por la finca para comparar sus cafés entre sí. No es una catación
+ * certificada ni un puntaje SCA, y la tienda lo presenta así. Alimenta la
+ * comparación y el asistente "Ayúdame a elegir". Ajusta los valores con la
+ * catación de cada lote; un café sin perfil usa el de su categoría.
  */
 export type TasteId = "cacao" | "citrico" | "dulce" | "equilibrado";
 export type DrinkId = "negro" | "leche";
@@ -22,6 +24,10 @@ export type CoffeeProfile = {
   methods: string[];
   /** Una línea que dice por qué elegirlo. */
   pitch: string;
+  /** Tipo de tostión, si la finca lo ha confirmado. */
+  roast?: string;
+  /** Proceso de beneficio (lavado, honey, natural), si está confirmado. */
+  postHarvest?: string;
 };
 
 const ESPRESSO = "Espresso · fina";
@@ -43,6 +49,7 @@ const byProduct: Record<string, CoffeeProfile> = {
     milk: 2,
     methods: [ESPRESSO, MOKA, PRESS, ELECTRIC],
     pitch: "La taza más intensa de la casa: cacao oscuro, frutos secos y un final ahumado.",
+    roast: "A la leña",
   },
   precision: {
     intensity: 3,
@@ -52,7 +59,8 @@ const byProduct: Record<string, CoffeeProfile> = {
     taste: { citrico: 3, equilibrado: 2, dulce: 1 },
     milk: 1,
     methods: [V60, CHEMEX, AEROPRESS, ELECTRIC],
-    pitch: "Naranja y mandarina con panela, almendra y un final limpio.",
+    pitch: "Naranja y mandarina con panela, almendra y chocolate con leche.",
+    roast: "Media",
   },
   "honey-red": {
     intensity: 3,
@@ -63,6 +71,7 @@ const byProduct: Record<string, CoffeeProfile> = {
     milk: 1,
     methods: [PRESS, V60, AEROPRESS, COLD],
     pitch: "Dulce y redondo, de cuerpo medio-alto y acidez media: un microlote para tomar sin afán.",
+    postHarvest: "Honey (Red)",
   },
   honey: {
     intensity: 3,

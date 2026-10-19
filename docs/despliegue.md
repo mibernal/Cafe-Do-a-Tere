@@ -22,12 +22,12 @@
 ## Configuración inicial (una sola vez)
 
 1. **Activa Pages:** *Settings → Pages → Build and deployment → Source: GitHub Actions*.
-2. **Secretos del catálogo:** *Settings → Secrets and variables → Actions → New repository secret*:
+2. **Secretos del catálogo:** *Settings → Secrets and variables → Actions → pestaña Secrets → **Repository secrets** → New repository secret*. Deben ser secretos del repositorio, no de un ambiente: el workflow de publicación no usa ambientes para el build.
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (la llave publicable / anon, la misma de `.env.local`)
 
    Nunca subas la `SUPABASE_SERVICE_ROLE_KEY` ni las llaves de Wompi: el sitio estático no las necesita.
-3. **Variables públicas (opcional):** en la pestaña *Variables*: `NEXT_PUBLIC_WHATSAPP_NUMBER`, `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_INSTAGRAM_URL`. Sin ellas se usan los valores del código.
+3. **Variables públicas (opcional):** en la pestaña *Variables*: `NEXT_PUBLIC_WHATSAPP_NUMBER`, `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_INSTAGRAM_URL`. Sin ellas se usan los valores del código. Ahí también van los datos del responsable para las páginas legales: `BUSINESS_LEGAL_NAME`, `BUSINESS_TAX_ID`, `BUSINESS_ADDRESS` y `BUSINESS_LEGAL_EMAIL` (ver `docs/datos-pendientes.md`). Mientras falten, el build publica `/terminos` y `/privacidad` como borrador sin indexar y lo advierte en el resumen del workflow.
 4. **Ambiente para migraciones:** *Settings → Environments → New environment* `supabase-production`:
    - *Required reviewers*: tu usuario (nada se aplica sin tu aprobación).
    - *Deployment branches and tags*: solo `main`.
@@ -62,7 +62,7 @@
 
 ## Cuando quieras cobrar en línea
 
-Publica el build con servidor (`npm run build`) en un hosting compatible con Next.js 16 (Netlify, que permite uso comercial en el plan gratuito, o Vercel Pro), con las variables de `.env.example`. El código de Wompi, contra entrega, seguimiento y panel ya está probado. Luego cambia el sitio de GitHub Pages por una redirección al dominio nuevo, o desactívalo.
+Sigue `docs/migracion-hosting.md`: modo aplicación completa (`npm run build`) en Netlify u otro hosting con servidor, variables de producción, pruebas con Wompi en ambiente de pruebas, checklist de aprobación y ruta de reversión. GitHub Pages se mantiene activo hasta que el propietario apruebe el nuevo hosting.
 
 ## Límites conocidos
 

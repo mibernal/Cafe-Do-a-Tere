@@ -42,15 +42,22 @@ export function generateMetadata(): Metadata {
   return {
     metadataBase: metadataBase(),
     title: { default: "Café Doña Tere | Café de origen de Cachipay", template: "%s | Café Doña Tere" },
-    description: `Café colombiano de Finca La Libertad, Cachipay: tostado a la leña, tostión de precisión y el microlote Honey Red, con molienda para tu método. ${orderingLine()}`,
+    description: `Café colombiano de Finca La Libertad, Cachipay, cultivado y tostado por la familia y molido para tu método. ${orderingLine()}`,
     applicationName: "Café Doña Tere",
     referrer: "strict-origin-when-cross-origin",
     openGraph: {
       title: "Café Doña Tere, café con alma de abuela",
       description: "Café de origen de Finca La Libertad, Cachipay, tostado con calma y enviado a tu casa.",
+      siteName: "Café Doña Tere",
       locale: "es_CO",
       type: "website",
       // Relativa a metadataBase, que en GitHub Pages ya incluye el subdirectorio.
+      images: [{ url: "/assets/roasting.jpg", width: 675, height: 900, alt: "Tostión del café de Finca La Libertad" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Café Doña Tere, café con alma de abuela",
+      description: "Café de origen de Finca La Libertad, Cachipay, tostado con calma y enviado a tu casa.",
       images: ["/assets/roasting.jpg"],
     },
     robots: { index: true, follow: true },

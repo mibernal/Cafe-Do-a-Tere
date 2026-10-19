@@ -4,6 +4,7 @@ import type { Product, ShippingZone } from "@/lib/store-types";
 import { freshFetch } from "@/lib/supabase/admin";
 import { GRIND_OPTIONS, GROUND_GRIND_VALUES } from "@/lib/grind-options";
 import { asset, isStaticSite } from "@/lib/site-target";
+import { isProvisionalLabel } from "@/lib/provisional-assets";
 
 const ALL_GRINDS = GRIND_OPTIONS.map((option) => option.value);
 
@@ -12,13 +13,14 @@ function referenceVariant(
   label: string,
   weightGrams: number,
   image: string,
-  options: { priceCop?: number; grinds?: string[]; beanImage?: string } = {},
+  options: { grinds?: string[]; beanImage?: string } = {},
 ) {
+  // Sin base de datos no hay precios: nunca se inventan cifras en el código.
   return {
     id,
     label,
     weightGrams,
-    priceCop: options.priceCop ?? 0,
+    priceCop: 0,
     priceConfirmed: false,
     available: false,
     lowStock: false,
@@ -52,7 +54,6 @@ export const previewCatalog: Product[] = [
     variants: [
       referenceVariant("lena-250", "250 g", 250, "/assets/cafe-lena-250-front.jpg", { grinds: [...GROUND_GRIND_VALUES] }),
       referenceVariant("lena-500", "500 g", 500, "/assets/cafe-lena-500-ground-front.jpg", {
-        priceCop: 40000,
         beanImage: "/assets/cafe-lena-500-beans-front.jpg",
       }),
     ],
@@ -108,14 +109,18 @@ function publicClient() {
   });
 }
 
-/** Rutas de imagen listas para publicar (con el basePath del sitio estático). */
+/**
+ * Rutas de imagen listas para publicar (con el basePath del sitio estático).
+ * Una etiqueta ilustrativa se reemplaza por la foto del café para no
+ * presentarla como el empaque real (ver lib/provisional-assets.ts).
+ */
 function withAssetPaths(products: Product[]): Product[] {
   return products.map((product) => ({
     ...product,
     image: asset(product.image),
     variants: product.variants.map((variant) => ({
       ...variant,
-      image: asset(variant.image),
+      image: asset(isProvisionalLabel(variant.image) ? product.image : variant.image),
       beanImage: variant.beanImage ? asset(variant.beanImage) : null,
     })),
   }));

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { isStaticSite } from "@/lib/site-target";
+import { legalComplete } from "@/lib/legal";
 
 // Se genera durante el build en ambos destinos.
 export const dynamic = "force-static";
@@ -10,7 +11,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const page = (path: string) => `${base}${path}${isStaticSite ? "/" : ""}`;
   return [
     { url: `${base}/`, changeFrequency: "weekly", priority: 1 },
-    { url: page("/terminos"), changeFrequency: "yearly", priority: 0.2 },
-    { url: page("/privacidad"), changeFrequency: "yearly", priority: 0.2 },
+    // Los documentos legales en borrador no se indexan ni se listan.
+    ...(legalComplete()
+      ? [
+          { url: page("/terminos"), changeFrequency: "yearly" as const, priority: 0.2 },
+          { url: page("/privacidad"), changeFrequency: "yearly" as const, priority: 0.2 },
+        ]
+      : []),
   ];
 }

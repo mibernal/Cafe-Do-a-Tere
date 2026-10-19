@@ -9,6 +9,7 @@ Tienda de Finca La Libertad (Cachipay, Cundinamarca) en **Next.js 16 (App Router
 - Panel `/admin` para pedidos, inventario, catálogo (textos, precios, presentaciones nuevas) y ciudades de envío.
 - Sin configuración de pagos la tienda funciona en **modo WhatsApp**: el cliente arma la bolsa y la envía con un mensaje listo.
 - **Publicada en GitHub Pages** como sitio estático en modo WhatsApp: `https://mibernal.github.io/Cafe-Do-a-Tere/`. El catálogo se lee de Supabase en cada build. CI, publicación, migraciones de Supabase con aprobación, CodeQL y Dependabot corren en GitHub Actions: ver [`docs/despliegue.md`](docs/despliegue.md).
+- Datos del negocio que aún faltan (legales, precios, café, etiquetas): [`docs/datos-pendientes.md`](docs/datos-pendientes.md). Migración a un hosting con servidor para cobrar en línea: [`docs/migracion-hosting.md`](docs/migracion-hosting.md).
 
 ## Desarrollo local
 

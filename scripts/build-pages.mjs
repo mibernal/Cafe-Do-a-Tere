@@ -96,4 +96,15 @@ for (const forbidden of ["admin", "api", "seguimiento"]) {
   if (existsSync(join(outDir, forbidden))) fail(`out/${forbidden} no debe existir en el sitio estático.`);
 }
 
+// Documentos legales con datos pendientes: se publican como borrador visible,
+// nunca en silencio.
+const pendingLegal = ["terminos", "privacidad"]
+  .map((page) => [page, (readFileSync(join(outDir, page, "index.html"), "utf8").match(/class="legal-pending"/g) ?? []).length])
+  .filter(([, count]) => count > 0);
+if (pendingLegal.length) {
+  const detail = pendingLegal.map(([page, count]) => `/${page}/ (${count})`).join(", ");
+  const message = `Documentos legales con datos pendientes: ${detail}. Se publican como borrador y sin indexar; ver docs/datos-pendientes.md.`;
+  console.warn(process.env.GITHUB_ACTIONS ? `::warning title=Documentos legales en borrador::${message}` : `\n⚠ ${message}`);
+}
+
 console.log(`\n✓ Sitio estático listo en out/ (${pages} páginas con CSP, ${cards} cafés en la portada).`);

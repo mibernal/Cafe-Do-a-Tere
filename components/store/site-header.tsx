@@ -12,9 +12,9 @@ export function SiteHeader({ announcement, links }: { announcement: string; link
 
   return (
     <>
-      <div className="announcement">
+      <aside className="announcement" aria-label="Aviso">
         <p>{announcement}</p>
-      </div>
+      </aside>
       <header className="site-header">
         <a className="brand" href="#inicio" aria-label="Café Doña Tere, inicio">
           <Image src={logoSrc} alt="" width={52} height={52} preload />

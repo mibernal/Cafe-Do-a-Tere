@@ -4,32 +4,49 @@ import { PolicyLayout } from "@/components/policy-layout";
 import { site, whatsappLink } from "@/lib/site";
 import { renderPerRequest } from "@/lib/request-time";
 import { isStaticSite } from "@/lib/site-target";
+import { legalComplete } from "@/lib/legal";
+import { LegalValue, Pending } from "@/components/legal-pending";
 
-export const metadata: Metadata = { title: "Términos de compra" };
+export function generateMetadata(): Metadata {
+  return {
+    title: "Términos de compra",
+    description: "Condiciones de compra de Café Doña Tere: precios, medios de pago, envíos, retracto, reversión del pago y garantía.",
+    alternates: { canonical: isStaticSite ? "/terminos/" : "/terminos" },
+    // Un borrador con datos pendientes no se indexa.
+    robots: legalComplete() ? { index: true, follow: true } : { index: false, follow: true },
+  };
+}
+
 export default async function TermsPage() {
   await renderPerRequest();
   return (
     <PolicyLayout
       title="Términos de compra"
-      draftNote="Borrador para revisión del comercio. Completa los datos entre corchetes y valida las condiciones con tu asesor antes de publicar (Ley 1480 de 2011, Estatuto del Consumidor, y Decreto 587 de 2016)."
+      draftNote={
+        legalComplete()
+          ? undefined
+          : "Borrador en revisión. Los datos marcados como pendientes los debe completar el comercio, y el texto debe validarlo un asesor (Ley 1480 de 2011, Estatuto del Consumidor, y Decreto 587 de 2016). Este documento no es definitivo."
+      }
     >
       <section>
         <h2>Quién vende</h2>
         <p>
-          {site.name}, [razón social], NIT [número], [dirección], {site.town}, {site.region}. Atención por WhatsApp al{" "}
-          {site.whatsappDisplay} y al correo [correo].
+          {site.name}, <LegalValue field="BUSINESS_LEGAL_NAME" label="razón social" />, identificación tributaria{" "}
+          <LegalValue field="BUSINESS_TAX_ID" label="NIT" />, <LegalValue field="BUSINESS_ADDRESS" label="dirección" />,{" "}
+          {site.town}, {site.region}. Atención por WhatsApp al {site.whatsappDisplay} y al correo{" "}
+          <LegalValue field="BUSINESS_LEGAL_EMAIL" label="correo" />.
         </p>
       </section>
       <section>
         <h2>Precios y disponibilidad</h2>
         {isStaticSite ? (
           <p>
-            Los precios están en pesos colombianos e incluyen los impuestos aplicables [confirmar]. Los pedidos se hacen
+            Los precios están en pesos colombianos e incluyen los impuestos aplicables <Pending>confirmar impuestos</Pending>. Los pedidos se hacen
             por WhatsApp: antes de pagar te confirmamos disponibilidad, valor del domicilio según tu ciudad y total.
           </p>
         ) : (
           <p>
-            Los precios están en pesos colombianos e incluyen los impuestos aplicables [confirmar]. El domicilio se suma
+            Los precios están en pesos colombianos e incluyen los impuestos aplicables <Pending>confirmar impuestos</Pending>. El domicilio se suma
             según la ciudad y se muestra antes de pagar. Las unidades se reservan mientras completas el pago en línea (35
             minutos) o mientras confirmamos un pedido contra entrega (hasta 72 horas).
           </p>
@@ -39,7 +56,7 @@ export default async function TermsPage() {
         <h2>Medios de pago</h2>
         {isStaticSite ? (
           <p>
-            Acordamos el medio de pago contigo por WhatsApp al confirmar el pedido [completar los medios aceptados]. El
+            Acordamos el medio de pago contigo por WhatsApp al confirmar el pedido <Pending>medios de pago aceptados</Pending>. El
             pedido queda confirmado cuando te enviamos la confirmación por ese mismo canal.
           </p>
         ) : (
@@ -52,13 +69,17 @@ export default async function TermsPage() {
       </section>
       <section>
         <h2>Envíos</h2>
-        <p>[Completar tiempos, cobertura, transportadoras y qué pasa si no hay nadie para recibir.]</p>
+        <p>
+          <Pending>tiempos, cobertura, transportadoras y qué pasa si no hay nadie para recibir</Pending>
+        </p>
       </section>
       <section>
         <h2>Derecho de retracto</h2>
         <p>
-          [Validar su aplicación y excepciones para alimentos y productos preparados según las especificaciones del
-          cliente, como la molienda.] Cuando aplique, puedes ejercerlo dentro de los cinco días hábiles siguientes a la
+          <Pending>
+            validar su aplicación y excepciones para alimentos y productos preparados según las especificaciones del
+            cliente, como la molienda
+          </Pending> Cuando aplique, puedes ejercerlo dentro de los cinco días hábiles siguientes a la
           entrega, devolviendo el producto en las mismas condiciones; el dinero se reintegra dentro de los treinta días
           calendario siguientes.
         </p>

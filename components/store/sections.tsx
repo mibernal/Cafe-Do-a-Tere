@@ -120,10 +120,16 @@ export function Benefits({ options }: { options: CheckoutOptions }) {
       title: options.ordersEnabled ? "Paga como prefieras" : "Te acompañamos en la compra",
       text: paymentSentence(options),
     },
-    {
-      title: "Sigue tu pedido",
-      text: "Con tu compra recibes un enlace privado para ver cada paso, del pago a la entrega en tu puerta.",
-    },
+    // El enlace privado de seguimiento solo existe con pedidos en línea.
+    options.ordersEnabled
+      ? {
+          title: "Sigue tu pedido",
+          text: "Con tu compra recibes un enlace privado para ver cada paso, del pago a la entrega en tu puerta.",
+        }
+      : {
+          title: "Te avisamos por WhatsApp",
+          text: "Coordinamos contigo la entrega por WhatsApp y te contamos cuándo sale tu café de la finca.",
+        },
   ];
   return (
     <section className="benefits" aria-label="Por qué comprar en la finca">
@@ -171,8 +177,12 @@ export function OriginSection() {
               </dd>
             </div>
             <div>
-              <dt>Variedad</dt>
-              <dd>Café excelso 100% arábica</dd>
+              <dt>Especie</dt>
+              <dd>Arábica</dd>
+            </div>
+            <div>
+              <dt>Clasificación</dt>
+              <dd>Excelso</dd>
             </div>
           </dl>
         </div>
@@ -219,7 +229,7 @@ export function Faq({ options, products }: { options: CheckoutOptions; products:
   const questions: { q: string; a: React.ReactNode }[] = [
     {
       q: "¿De dónde viene el café?",
-      a: "De Finca La Libertad, en Cachipay, Cundinamarca, entre 1.450 y 1.650 metros sobre el nivel del mar. Es café excelso 100% arábica, cultivado y tostado por la familia.",
+      a: "De Finca La Libertad, en Cachipay, Cundinamarca, entre 1.450 y 1.650 metros sobre el nivel del mar. Es café 100% arábica de clasificación excelso (la calidad comercial del grano), cultivado y tostado por la familia.",
     },
   ];
   if (products.length > 1) {
