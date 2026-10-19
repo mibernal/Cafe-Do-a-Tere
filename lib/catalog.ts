@@ -6,7 +6,7 @@ import type { Product, ShippingZone } from "@/lib/store-types";
 import { freshFetch } from "@/lib/supabase/admin";
 import { GRIND_OPTIONS, GROUND_GRIND_VALUES } from "@/lib/grind-options";
 import { asset, isStaticSite } from "@/lib/site-target";
-import { packFor } from "@/lib/provisional-assets";
+import { packFor, packMatches } from "@/lib/provisional-assets";
 import { site } from "@/lib/site";
 
 const ALL_GRINDS = GRIND_OPTIONS.map((option) => option.value);
@@ -119,7 +119,8 @@ function publicClient() {
 /**
  * Rutas de imagen listas para publicar (con el basePath del sitio estático).
  * Una variante que todavía guarda la ruta de su etiqueta muestra la bolsa
- * empacada con esa etiqueta (ver lib/provisional-assets.ts).
+ * empacada con esa etiqueta (ver lib/provisional-assets.ts). Si la bolsa es de
+ * otro peso que la presentación, se muestra la foto del café en su lugar.
  */
 function withAssetPaths(products: Product[]): Product[] {
   return products.map((product) => ({
@@ -127,9 +128,9 @@ function withAssetPaths(products: Product[]): Product[] {
     image: asset(product.image),
     variants: product.variants.map((variant) => {
       const pack = packFor(variant.image);
-      const label = isMissingAsset(pack) ? product.image : pack;
+      const label = isMissingAsset(pack) || !packMatches(pack, variant) ? product.image : pack;
       const beans = variant.beanImage ? packFor(variant.beanImage) : null;
-      const beanImage = beans && !isMissingAsset(beans) ? beans : null;
+      const beanImage = beans && !isMissingAsset(beans) && packMatches(beans, variant) ? beans : null;
       return { ...variant, image: asset(label), beanImage: beanImage ? asset(beanImage) : null };
     }),
   }));
