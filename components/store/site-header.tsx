@@ -35,7 +35,7 @@ export function SiteHeader({ announcement, links }: { announcement: string; link
             type="button"
             className="bag-button"
             onClick={openCart}
-            aria-label={totalItems ? `Abrir bolsa, ${totalItems} ${totalItems === 1 ? "café" : "cafés"}` : "Abrir bolsa"}
+            aria-label={totalItems ? `Bolsa, ${totalItems} ${totalItems === 1 ? "café" : "cafés"}` : "Bolsa"}
           >
             <ShoppingBag size={19} aria-hidden />
             <span className="bag-label">Bolsa</span>

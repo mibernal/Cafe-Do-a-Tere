@@ -24,8 +24,34 @@ select set_config('request.jwt.claims', '{"role":"authenticated","app_metadata":
 select count(*) as non_admin_orders_visible from public.orders;
 do $$ begin
   begin perform public.settle_wompi_transaction(repeat('a',64),'x','x','APPROVED',1,'COP'); raise exception 'FAIL auth settle'; exception when insufficient_privilege then raise notice 'ok: authenticated cannot settle'; end;
+  begin truncate public.orders; raise exception 'FAIL auth truncate'; exception when insufficient_privilege then raise notice 'ok: authenticated cannot truncate orders'; end;
 end $$;
 reset role;
+
+-- 007: ni anon ni authenticated escriben directo en tablas o secuencias, y un
+-- objeto nuevo en public no queda expuesto por defecto.
+do $$
+declare exposed text;
+begin
+  select string_agg(format('%s:%s:%s', r, c.relname, p), ', ') into exposed
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace,
+       unnest(array['anon','authenticated']) r,
+       unnest(array['INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER']) p
+  where n.nspname = 'public' and c.relkind in ('r','v','m','p') and has_table_privilege(r, c.oid, p);
+  if exposed is not null then raise exception 'FAIL write privileges: %', exposed; end if;
+  raise notice 'ok: anon/authenticated have no write privileges on public tables';
+
+  create table public.zz_privilege_probe (id int);
+  create function public.zz_privilege_probe_fn() returns int language sql as 'select 1';
+  if has_table_privilege('anon', 'public.zz_privilege_probe', 'SELECT')
+     or has_table_privilege('authenticated', 'public.zz_privilege_probe', 'SELECT')
+     or has_function_privilege('anon', 'public.zz_privilege_probe_fn()', 'EXECUTE') then
+    raise exception 'FAIL new objects exposed by default';
+  end if;
+  drop function public.zz_privilege_probe_fn();
+  drop table public.zz_privilege_probe;
+  raise notice 'ok: new public objects are not exposed by default';
+end $$;
 
 -- ---------------------------------------------------------------- service role setup
 set role service_role;

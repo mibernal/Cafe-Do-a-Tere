@@ -10,7 +10,7 @@
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -84,6 +84,30 @@ for (const file of htmlFiles(outDir)) {
   pages += 1;
 }
 
+// ------------------------------------------- imágenes responsivas (WebP)
+// Una versión por ancho de lib/image-widths.json para lib/image-loader.ts.
+// Nunca se agranda el original: un ancho mayor recibe el tamaño original.
+const sharp = require("sharp");
+const widths = JSON.parse(readFileSync(join(root, "lib", "image-widths.json"), "utf8"));
+const allWidths = [...new Set([...widths.imageSizes, ...widths.deviceSizes])].sort((a, b) => a - b);
+const assetsDir = join(root, "public", "assets");
+const responsiveDir = join(outDir, "assets", "_w");
+mkdirSync(responsiveDir, { recursive: true });
+let variants = 0;
+for (const name of readdirSync(assetsDir)) {
+  const match = /^(.+)\.(?:jpe?g|png)$/i.exec(name);
+  if (!match) continue;
+  const source = join(assetsDir, name);
+  const { width: original } = await sharp(source).metadata();
+  for (const width of allWidths) {
+    await sharp(source)
+      .resize({ width: Math.min(width, original), withoutEnlargement: true })
+      .webp({ quality: 76, effort: 5 })
+      .toFile(join(responsiveDir, `${match[1]}-${width}.webp`));
+    variants += 1;
+  }
+}
+
 // GitHub Pages con Actions no usa Jekyll, pero así _next/ nunca se ignora.
 writeFileSync(join(outDir, ".nojekyll"), "");
 
@@ -107,4 +131,4 @@ if (pendingLegal.length) {
   console.warn(process.env.GITHUB_ACTIONS ? `::warning title=Documentos legales en borrador::${message}` : `\n⚠ ${message}`);
 }
 
-console.log(`\n✓ Sitio estático listo en out/ (${pages} páginas con CSP, ${cards} cafés en la portada).`);
+console.log(`\n✓ Sitio estático listo en out/ (${pages} páginas con CSP, ${cards} cafés en la portada, ${variants} imágenes WebP).`);
