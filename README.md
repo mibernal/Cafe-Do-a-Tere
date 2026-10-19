@@ -43,6 +43,7 @@ Las fuentes (Playfair Display y DM Sans, licencia OFL) están en `app/fonts/`: e
    - `202610180003_brew_method_grinds.sql`
    - `202610190004_varieties_cod_operations.sql` (variedades nuevas, contra entrega, zonas de envío públicas, operación completa del panel)
    - `202610190005_catalogo_vigente.sql` (deja publicados solo los tres cafés vigentes y presenta el Honey Red como microlote; no toca cafés a los que ya les confirmaste precio o cargaste inventario)
+   - `202610190006_altura_finca.sql` (completa la altura confirmada de la finca, 1.450–1.650 m s. n. m., en los cafés que seguían «por confirmar»)
 
    La migración 004 cambia funciones que usa la app: despliega la base de datos y esta versión del código al mismo tiempo.
 3. En **Authentication → Providers → Email** desactiva el registro público (*Allow new users to sign up*). Crea la cuenta de Doña Tere y asígnale el rol desde el editor SQL (nunca en `user_metadata`, que el usuario puede editar):

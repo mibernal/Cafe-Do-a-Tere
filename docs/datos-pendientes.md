@@ -35,13 +35,13 @@ Puntos para revisión profesional: retracto y sus excepciones (Ley 1480 de 2011,
 
 | Dato | Estado en la tienda | Qué falta |
 |---|---|---|
-| Variedad botánica (Castillo, Caturra, etc.) | No se publica | Variedad confirmada por lote |
-| Especie: arábica | Publicada (sale de la etiqueta) | Confirmar |
-| Clasificación: excelso | Publicada como clasificación, no como variedad | Confirmar |
-| Altura 1.450–1.650 m s. n. m. | Publicada (sale del sitio original) | Confirmar con el registro de la finca |
+| Variedades: Castillo 60 % · Caturra 40 % | Confirmada por el comercio; publicada en el origen, en la ficha de cada café y en los datos estructurados | Si un lote tiene otra composición, pasar el dato a ese café |
+| Especie: arábica | Publicada (sale de la etiqueta) | — |
+| Clasificación: excelso | Confirmada por el comercio; publicada como clasificación | — |
+| Altura 1.450–1.650 m s. n. m. | Confirmada por el comercio; publicada en los tres cafés (migración 006) | — |
 | Proceso de beneficio de Tostado a la leña y Tostión de precisión | No se publica | Lavado, honey o natural, según el lote |
 | Honey Red como «microlote de la finca» | Publicado | Confirmar que el Honey Red es el microlote |
-| Escalas de intensidad, acidez, cuerpo y dulzor | Publicadas como orientativas, no como catación | Ajustarlas con la catación en `lib/coffee-profiles.ts` |
+| Escalas de intensidad, acidez, cuerpo y dulzor | Publicadas como orientativas, revisadas con la investigación de `docs/perfiles-de-taza.md` | Ajustarlas con la catación de cada lote en `lib/coffee-profiles.ts` |
 | Notas de taza del Honey Red | Describen el perfil («dulce y redondo, cuerpo medio-alto, acidez media») | Notas de sabor reales; se editan en `/admin` |
 | Nombre comercial de la tostión de precisión | La tienda dice «Tostión de precisión»; la etiqueta, «Tostado en precisión» | Elegir un nombre y usarlo en ambos |
 

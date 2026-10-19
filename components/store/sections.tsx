@@ -4,7 +4,7 @@ import { MessageCircle } from "lucide-react";
 import type { CheckoutOptions, Product } from "@/lib/store-types";
 import { productBand, bandVars } from "@/lib/catalog-style";
 import { formatCOP } from "@/lib/money";
-import { site, whatsappLink, logoSrc } from "@/lib/site";
+import { site, whatsappLink, logoSrc, varietiesLabel, varietiesPhrase, altitudeText } from "@/lib/site";
 import { coffeeProfile, countCoffees } from "@/lib/coffee-profiles";
 import { asset, isStaticSite } from "@/lib/site-target";
 
@@ -162,13 +162,17 @@ export function OriginSection() {
             montañas, frutales y mandarinos, y cuidamos cada paso: la cosecha, el secado y una tostión sin afán.
           </p>
           <p>
+            En la finca crecen dos variedades: {varietiesPhrase}. Los cafés de la casa comparten finca, altura y
+            variedades; lo que los distingue es el proceso y la tostión.
+          </p>
+          <p>
             El tostado a la leña es la receta de la casa: el grano se mueve a mano sobre el fuego hasta que el aroma
             dice que está listo. Así llega a tu mesa un café con el carácter de su origen.
           </p>
           <dl className="origin-facts">
             <div>
               <dt>Altura</dt>
-              <dd>{site.altitude}</dd>
+              <dd>{altitudeText(site.altitude)}</dd>
             </div>
             <div>
               <dt>Municipio</dt>
@@ -178,11 +182,15 @@ export function OriginSection() {
             </div>
             <div>
               <dt>Especie</dt>
-              <dd>Arábica</dd>
+              <dd>{site.species}</dd>
             </div>
             <div>
               <dt>Clasificación</dt>
-              <dd>Excelso</dd>
+              <dd>{site.grade}</dd>
+            </div>
+            <div className="origin-fact-wide">
+              <dt>Variedades</dt>
+              <dd>{varietiesLabel}</dd>
             </div>
           </dl>
         </div>
@@ -229,7 +237,26 @@ export function Faq({ options, products }: { options: CheckoutOptions; products:
   const questions: { q: string; a: React.ReactNode }[] = [
     {
       q: "¿De dónde viene el café?",
-      a: "De Finca La Libertad, en Cachipay, Cundinamarca, entre 1.450 y 1.650 metros sobre el nivel del mar. Es café 100% arábica de clasificación excelso (la calidad comercial del grano), cultivado y tostado por la familia.",
+      a: `De Finca La Libertad, en Cachipay, Cundinamarca, entre 1.450 y 1.650 metros sobre el nivel del mar. Es café 100% arábica, de las variedades Castillo y Caturra, con clasificación excelso (la calidad comercial del grano). Lo cultiva y lo tuesta la familia.`,
+    },
+    {
+      q: "¿Qué variedades cultivan?",
+      a: (
+        <>
+          <p>
+            {varietiesPhrase.charAt(0).toUpperCase() + varietiesPhrase.slice(1)}. El Castillo lo desarrolló Cenicafé,
+            el centro de investigación de los caficultores colombianos, a partir del Caturra y del Híbrido de Timor, y
+            se entregó en 2005. Resiste la roya, una de las enfermedades que más daño le hacen al cafeto. El Caturra
+            es una mutación natural del Bourbon descubierta en Brasil, de planta compacta, y es uno de los padres del
+            Castillo.
+          </p>
+          <p>
+            Ni las pruebas de Cenicafé ni una cata a ciegas organizada por Catholic Relief Services y World Coffee
+            Research encontraron diferencias de calidad entre las dos. Sí cambian algunos matices: el Castillo tiende
+            al chocolate oscuro y a las nueces tostadas, y el Caturra, a notas florales, de cacao y de caramelo.
+          </p>
+        </>
+      ),
     },
   ];
   if (products.length > 1) {

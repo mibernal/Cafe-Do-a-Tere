@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle, PackageSearch, X } from "lucide-react";
 import type { Product } from "@/lib/store-types";
 import { categoryFilters, productBand, bandVars } from "@/lib/catalog-style";
-import { whatsappLink, logoSrc } from "@/lib/site";
+import { site, whatsappLink, logoSrc, varietiesLabel, altitudeText } from "@/lib/site";
 import { coffeeProfile, countCoffees } from "@/lib/coffee-profiles";
 import { notesPhrase } from "@/lib/grind-options";
 import { ProductPurchase, resolveSelection, type Selection } from "@/components/store/product-purchase";
@@ -127,6 +127,12 @@ function ProductDialog({
                 <dt>Origen</dt>
                 <dd>{product.origin}</dd>
               </div>
+              {product.origin.startsWith(site.farm) && (
+                <div>
+                  <dt>Variedades</dt>
+                  <dd>{varietiesLabel}</dd>
+                </div>
+              )}
               {coffeeProfile(product).roast && (
                 <div>
                   <dt>Tostión</dt>
@@ -142,7 +148,7 @@ function ProductDialog({
               {product.altitude && !/por confirmar/i.test(product.altitude) && (
                 <div>
                   <dt>Altura</dt>
-                  <dd>{product.altitude}</dd>
+                  <dd>{altitudeText(product.altitude)}</dd>
                 </div>
               )}
               <div>
