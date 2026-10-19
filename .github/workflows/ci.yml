@@ -79,6 +79,9 @@ jobs:
     name: Dependencias nuevas
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    # Requiere "Dependency graph" activo (Settings > Code security). Mientras
+    # tanto, informa sin bloquear el PR.
+    continue-on-error: true
     permissions:
       contents: read
       pull-requests: write
