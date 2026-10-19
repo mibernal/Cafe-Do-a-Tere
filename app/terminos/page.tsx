@@ -16,20 +16,20 @@ export default async function TermsPage() {
       <section>
         <h2>Quién vende</h2>
         <p>
-          {site.name}, [razón social], NIT [número], [dirección], {site.town}, {site.region}. Atención por WhatsApp al{" "}
-          {site.whatsappDisplay} y al correo [correo].
+          {site.name}, [MIGUEL ANGEL BERNAL], NIT [1069583873], [CRA 92 72A 69], {site.town}, {site.region}. Atención por WhatsApp al{" "}
+          {site.whatsappDisplay} y al correo [miguelangelbernal1991@gmail.com].
         </p>
       </section>
       <section>
         <h2>Precios y disponibilidad</h2>
         {isStaticSite ? (
           <p>
-            Los precios están en pesos colombianos e incluyen los impuestos aplicables [confirmar]. Los pedidos se hacen
+            Los precios están en pesos colombianos e incluyen los impuestos aplicables [No Aplica]. Los pedidos se hacen
             por WhatsApp: antes de pagar te confirmamos disponibilidad, valor del domicilio según tu ciudad y total.
           </p>
         ) : (
           <p>
-            Los precios están en pesos colombianos e incluyen los impuestos aplicables [confirmar]. El domicilio se suma
+            Los precios están en pesos colombianos e incluyen los impuestos aplicables [No Aplica]. El domicilio se suma
             según la ciudad y se muestra antes de pagar. Las unidades se reservan mientras completas el pago en línea (35
             minutos) o mientras confirmamos un pedido contra entrega (hasta 72 horas).
           </p>
@@ -39,7 +39,7 @@ export default async function TermsPage() {
         <h2>Medios de pago</h2>
         {isStaticSite ? (
           <p>
-            Acordamos el medio de pago contigo por WhatsApp al confirmar el pedido [completar los medios aceptados]. El
+            Acordamos el medio de pago contigo por WhatsApp al confirmar el pedido [BreB, Nequi]. El
             pedido queda confirmado cuando te enviamos la confirmación por ese mismo canal.
           </p>
         ) : (
@@ -52,7 +52,7 @@ export default async function TermsPage() {
       </section>
       <section>
         <h2>Envíos</h2>
-        <p>[Completar tiempos, cobertura, transportadoras y qué pasa si no hay nadie para recibir.]</p>
+        <p>[Tiempo de envio dependiendo de la ciudad, en bogota hasta 48 horas posterior al pedido, apican politicas de cada transportador]</p>
       </section>
       <section>
         <h2>Derecho de retracto</h2>

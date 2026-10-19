@@ -16,8 +16,7 @@ export default async function PrivacyPage() {
       <section>
         <h2>Responsable</h2>
         <p>
-          [Razón social o nombre del responsable], identificado con NIT o cédula [número], con domicilio en [dirección,
-          municipio] y correo de contacto [correo]. Canal de atención por WhatsApp: {site.whatsappDisplay}.
+          [MIGUEL ANGEL BERNAL], identificado con NIT o cédula [1069583873], con domicilio en [CRA 92 72A 69,bogota] y correo de contacto [miguelangelbernal1991@gmail.com]. Canal de atención por WhatsApp: {site.whatsappDisplay}.
         </p>
       </section>
       <section>
@@ -63,7 +62,7 @@ export default async function PrivacyPage() {
       </section>
       <section>
         <h2>Cuánto tiempo los conservamos</h2>
-        <p>[Completar.] El tiempo necesario para la entrega, la garantía y las obligaciones contables y tributarias.</p>
+        <p>[5 años.] El tiempo necesario para la entrega, la garantía y las obligaciones contables y tributarias.</p>
       </section>
       <section>
         <h2>Tus derechos</h2>
