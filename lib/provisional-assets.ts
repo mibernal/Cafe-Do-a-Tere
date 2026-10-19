@@ -69,3 +69,21 @@ export function largestPack(product: Product) {
   if (!variants.length) return undefined;
   return variants.reduce((big, variant) => (variant.weightGrams > big.weightGrams ? variant : big)).image;
 }
+
+/** Peso en gramos que muestra una bolsa o etiqueta, según su nombre de archivo. */
+export function packWeight(src: string) {
+  const match = /-(\d+)(?:-ground|-beans)?(?:-front)?\.(?:png|jpe?g)$/.exec(fileName(src));
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * Una bolsa solo se muestra si su peso coincide con el de la presentación
+ * (el peso guardado y, si lo trae, el nombre visible, p. ej. «340 g»). Así una
+ * presentación nueva o editada en el panel nunca muestra la bolsa de otro peso.
+ */
+export function packMatches(src: string, variant: { weightGrams: number; label: string }) {
+  const weight = packWeight(src);
+  if (weight === null) return true;
+  const labelGrams = /(\d+)\s*g\b/i.exec(variant.label);
+  return weight === variant.weightGrams && (!labelGrams || Number(labelGrams[1]) === weight);
+}

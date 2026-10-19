@@ -108,14 +108,20 @@ test("cada presentación muestra su bolsa con el peso y la molienda correctos", 
       const label = (await sizes.count())
         ? ((await card.locator(".size-option").nth(i).textContent()) ?? "").trim()
         : ((await card.locator(".size-single b").textContent()) ?? "").trim();
-      const weight = label.match(/\d+/)![0];
       const pack = card.locator(".visual-pack.is-shot img");
       await chooseGrind(card);
+      // Una presentación sin bolsa de su peso (p. ej. creada en el panel) muestra la foto del café.
+      if (!(await pack.count())) {
+        await expect(card.locator(".visual-photo")).toHaveCount(1);
+        continue;
+      }
       await expect(pack).toHaveAttribute("alt", new RegExp(`, ${label}$`));
-      expect(await pack.getAttribute("src")).toMatch(new RegExp(`pack-[a-z-]+-${weight}(-ground)?[-.\\d]`));
+      const grams = /(\d+)\s*g\b/.exec(label)?.[1] ?? "\\d+";
+      expect(await pack.getAttribute("src")).toMatch(new RegExp(`pack-[a-z-]+-${grams}(-ground)?[-.\\d]`));
       if (await card.locator('.grind-picker option[value="En grano"]').count()) {
         await chooseGrind(card, "En grano");
-        expect(await pack.getAttribute("src")).toMatch(new RegExp(`pack-[a-z-]+-${weight}-beans`));
+        const src = (await card.locator(".visual-pack.is-shot img, .visual-photo").first().getAttribute("src")) ?? "";
+        if (src.includes("/pack-")) expect(src).toMatch(new RegExp(`pack-[a-z-]+-${grams}-beans`));
       }
     }
   }
