@@ -8,7 +8,8 @@ frente. La etiqueta no se redibuja: se usa el archivo original
 | Script | Qué hace |
 |---|---|
 | `labels.py` | Completa las etiquetas que faltan: la versión **en grano** de Honey Red, Honey Black, Lavado y Natural (250 g y 500 g), tomando el ícono, la celda «Café tostado en grano» y el pie de la etiqueta original de Tostado a la leña 500 g en grano; y **Tostión de precisión 250 g** (la etiqueta de 500 g con el peso de 250 g). |
-| `packshots.py` | Genera `public/assets/pack-<café>-<peso>[-beans].png` (640 × 800, con transparencia). La bolsa de 250 g se dibuja más pequeña que la de 500 g. |
+| `weight.py` | Etiqueta de un peso nuevo desde otra de la misma familia: cambia solo los dígitos del contenido neto (p. ej. `weight.py public/assets honey-red 250 340` crea Honey Red 340 g, molido y en grano). |
+| `packshots.py` | Genera `public/assets/pack-<café>-<peso>[-beans].png` (640 × 800, con transparencia). La bolsa crece con el peso (250 g < 340 g < 500 g). |
 
 ```bash
 pip install opencv-python-headless numpy pillow imagequant

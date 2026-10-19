@@ -6,7 +6,7 @@ import type { Product, ShippingZone } from "@/lib/store-types";
 import { freshFetch } from "@/lib/supabase/admin";
 import { GRIND_OPTIONS, GROUND_GRIND_VALUES } from "@/lib/grind-options";
 import { asset, isStaticSite } from "@/lib/site-target";
-import { beansPackFor, packFor, packMatches } from "@/lib/provisional-assets";
+import { beansPackFor, packFor, packForWeight, packMatches } from "@/lib/provisional-assets";
 import { site } from "@/lib/site";
 
 const ALL_GRINDS = GRIND_OPTIONS.map((option) => option.value);
@@ -94,8 +94,8 @@ export const previewCatalog: Product[] = [
     badge: "Microlote",
     image: "/assets/cafe-honey-beans-closeup.jpg",
     variants: [
-      referenceVariant("honey-red-250", "250 g", 250, "/assets/pack-honey-red-250.png", {
-        beanImage: "/assets/pack-honey-red-250-beans.png",
+      referenceVariant("honey-red-340", "340 g", 340, "/assets/pack-honey-red-340.png", {
+        beanImage: "/assets/pack-honey-red-340-beans.png",
       }),
       referenceVariant("honey-red-500", "500 g", 500, "/assets/pack-honey-red-500.png", {
         beanImage: "/assets/pack-honey-red-500-beans.png",
@@ -122,15 +122,19 @@ function publicClient() {
  * empacada con esa etiqueta (ver lib/provisional-assets.ts). Si la bolsa es de
  * otro peso que la presentación, se muestra la foto del café en su lugar.
  */
+function forVariant(pack: string, variant: Product["variants"][number]) {
+  return packMatches(pack, variant) ? pack : packForWeight(pack, variant.weightGrams);
+}
+
 function withAssetPaths(products: Product[]): Product[] {
   return products.map((product) => ({
     ...product,
     image: asset(product.image),
     variants: product.variants.map((variant) => {
-      const pack = packFor(variant.image);
+      const pack = forVariant(packFor(variant.image), variant);
       const label = isMissingAsset(pack) || !packMatches(pack, variant) ? product.image : pack;
       const sellsBeans = variant.grinds.includes("En grano");
-      const beans = variant.beanImage ? packFor(variant.beanImage) : sellsBeans ? beansPackFor(pack) : null;
+      const beans = variant.beanImage ? forVariant(packFor(variant.beanImage), variant) : sellsBeans ? beansPackFor(pack) : null;
       const beanImage = beans && !isMissingAsset(beans) && packMatches(beans, variant) ? beans : null;
       return { ...variant, image: asset(label), beanImage: beanImage ? asset(beanImage) : null };
     }),
