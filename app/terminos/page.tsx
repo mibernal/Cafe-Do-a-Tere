@@ -32,8 +32,7 @@ export default async function TermsPage() {
         <h2>Quién vende</h2>
         <p>
           {site.name}, <LegalValue field="BUSINESS_LEGAL_NAME" label="razón social" />, identificación tributaria{" "}
-          <LegalValue field="BUSINESS_TAX_ID" label="NIT" />, <LegalValue field="BUSINESS_ADDRESS" label="dirección" />,{" "}
-          {site.town}, {site.region}. Atención por WhatsApp al {site.whatsappDisplay} y al correo{" "}
+          <LegalValue field="BUSINESS_TAX_ID" label="NIT" />, <LegalValue field="BUSINESS_ADDRESS" label="dirección" />. Atención por WhatsApp al {site.whatsappDisplay} y al correo{" "}
           <LegalValue field="BUSINESS_LEGAL_EMAIL" label="correo" />.
         </p>
       </section>
@@ -41,12 +40,12 @@ export default async function TermsPage() {
         <h2>Precios y disponibilidad</h2>
         {isStaticSite ? (
           <p>
-            Los precios están en pesos colombianos e incluyen los impuestos aplicables <Pending>confirmar impuestos</Pending>. Los pedidos se hacen
+            Los precios están en pesos colombianos y son precio final: no se les suman impuestos. Los pedidos se hacen
             por WhatsApp: antes de pagar te confirmamos disponibilidad, valor del domicilio según tu ciudad y total.
           </p>
         ) : (
           <p>
-            Los precios están en pesos colombianos e incluyen los impuestos aplicables <Pending>confirmar impuestos</Pending>. El domicilio se suma
+            Los precios están en pesos colombianos y son precio final: no se les suman impuestos. El domicilio se suma
             según la ciudad y se muestra antes de pagar. Las unidades se reservan mientras completas el pago en línea (35
             minutos) o mientras confirmamos un pedido contra entrega (hasta 72 horas).
           </p>
@@ -56,8 +55,8 @@ export default async function TermsPage() {
         <h2>Medios de pago</h2>
         {isStaticSite ? (
           <p>
-            Acordamos el medio de pago contigo por WhatsApp al confirmar el pedido <Pending>medios de pago aceptados</Pending>. El
-            pedido queda confirmado cuando te enviamos la confirmación por ese mismo canal.
+            Acordamos el medio de pago contigo por WhatsApp al confirmar el pedido: recibimos transferencias por Bre-B y
+            Nequi. El pedido queda confirmado cuando te enviamos la confirmación por ese mismo canal.
           </p>
         ) : (
           <p>
@@ -70,7 +69,9 @@ export default async function TermsPage() {
       <section>
         <h2>Envíos</h2>
         <p>
-          <Pending>tiempos, cobertura, transportadoras y qué pasa si no hay nadie para recibir</Pending>
+          El tiempo de entrega depende de la ciudad: en Bogotá, hasta 48 horas después de confirmado el pedido. Para
+          otras ciudades te confirmamos el tiempo estimado por WhatsApp antes del pago. Aplican las políticas de la
+          transportadora que hace la entrega.
         </p>
       </section>
       <section>

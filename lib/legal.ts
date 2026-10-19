@@ -1,12 +1,24 @@
 // Datos del responsable del comercio para los términos y la política de
-// datos. Se configuran con variables de entorno (ver .env.example) y nunca se
-// suponen: mientras falte alguno, las páginas legales se muestran como
-// borrador, no se indexan y el pago en línea permanece cerrado.
+// datos. Los publicó el propio comercio; una variable de entorno con el mismo
+// nombre los reemplaza (ver .env.example). Nunca se suponen: mientras falte un
+// dato o un texto, las páginas legales se muestran como borrador, no se
+// indexan y el pago en línea permanece cerrado.
 
 export type LegalField = { key: string; label: string; value: string };
 
+/**
+ * Datos del responsable publicados por el comercio. Una variable de entorno
+ * con el mismo nombre tiene prioridad (hosting o Variables de GitHub Actions).
+ */
+const MERCHANT: Record<string, string> = {
+  BUSINESS_LEGAL_NAME: "MIGUEL ANGEL BERNAL",
+  BUSINESS_TAX_ID: "1069583873",
+  BUSINESS_ADDRESS: "Carrera 92 # 72A-69, Bogotá",
+  BUSINESS_LEGAL_EMAIL: "miguelangelbernal1991@gmail.com",
+};
+
 function env(name: string) {
-  return (process.env[name] ?? "").trim();
+  return (process.env[name] ?? "").trim() || MERCHANT[name] || "";
 }
 
 export function legalFields(): LegalField[] {
@@ -31,12 +43,8 @@ export function legalValue(key: string) {
  * Cuando un texto quede definitivo en su página, quítalo de esta lista.
  */
 export const PENDING_LEGAL_CONTENT: { id: string; label: string; file: string }[] = [
-  { id: "impuestos", label: "Confirmar si los precios incluyen impuestos", file: "app/terminos/page.tsx" },
-  { id: "medios-pago", label: "Medios de pago aceptados al confirmar por WhatsApp", file: "app/terminos/page.tsx" },
-  { id: "envios", label: "Envíos: cobertura, tiempos, transportadoras y entregas fallidas", file: "app/terminos/page.tsx" },
   { id: "retracto", label: "Alcance del retracto para alimentos y café molido a la medida", file: "app/terminos/page.tsx" },
   { id: "encargados", label: "Encargados reales del tratamiento de datos", file: "app/privacidad/page.tsx" },
-  { id: "conservacion", label: "Tiempo de conservación de los datos", file: "app/privacidad/page.tsx" },
 ];
 
 /** Todo lo que falta para publicar los documentos legales como definitivos. */

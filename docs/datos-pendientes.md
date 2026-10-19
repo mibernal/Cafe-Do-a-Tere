@@ -4,25 +4,29 @@ La tienda no inventa datos del negocio, del café ni legales. Esta lista reúne 
 
 ## 1. Documentos legales
 
-Mientras falte cualquiera de estos datos, `/terminos` y `/privacidad` se publican con el aviso de borrador y los campos marcados como **Pendiente**. Además, no se indexan en buscadores y el pago en línea queda cerrado (el panel lo muestra en **Estado de la tienda**).
+Mientras falte cualquiera de estos datos o textos, `/terminos` y `/privacidad` se publican con el aviso de borrador y los campos marcados como **Pendiente**. Además, no se indexan en buscadores y el pago en línea queda cerrado (el panel lo muestra en **Estado de la tienda**).
 
-| Dato | Variable | Dónde |
+Datos del responsable: los publicó el comercio y viven en `lib/legal.ts` (`MERCHANT`). Una variable de entorno con el mismo nombre los reemplaza (`.env.local`, hosting o *Variables* de GitHub Actions).
+
+| Dato | Variable | Estado |
 |---|---|---|
-| Razón social o nombre del responsable | `BUSINESS_LEGAL_NAME` | `.env.local`, hosting o *Variables* de GitHub Actions |
-| NIT o cédula | `BUSINESS_TAX_ID` | ídem |
-| Dirección de notificaciones | `BUSINESS_ADDRESS` | ídem |
-| Correo de atención y de datos personales | `BUSINESS_LEGAL_EMAIL` (si falta, se usa `NEXT_PUBLIC_CONTACT_EMAIL`) | ídem |
+| Nombre del responsable | `BUSINESS_LEGAL_NAME` | Completo |
+| NIT o cédula | `BUSINESS_TAX_ID` | Completo |
+| Dirección de notificaciones | `BUSINESS_ADDRESS` | Completo (Bogotá) |
+| Correo de atención y de datos personales | `BUSINESS_LEGAL_EMAIL` | Completo |
 
-Textos que debe redactar el comercio y revisar un asesor. Cuando un texto quede definitivo, se reemplaza el marcador en la página y se quita su entrada de `PENDING_LEGAL_CONTENT` en `lib/legal.ts`.
+Textos:
 
-| Contenido | Archivo |
-|---|---|
-| Si los precios incluyen impuestos | `app/terminos/page.tsx` |
-| Medios de pago aceptados al confirmar por WhatsApp | `app/terminos/page.tsx` |
-| Envíos: cobertura, tiempos, transportadoras y entregas fallidas | `app/terminos/page.tsx` |
-| Alcance del retracto para alimentos y café molido a la medida | `app/terminos/page.tsx` |
-| Encargados reales del tratamiento de datos | `app/privacidad/page.tsx` |
-| Tiempo de conservación de los datos | `app/privacidad/page.tsx` |
+| Contenido | Archivo | Estado |
+|---|---|---|
+| Impuestos | `app/terminos/page.tsx` | Completo: precio final, no se suman impuestos |
+| Medios de pago al confirmar por WhatsApp | `app/terminos/page.tsx` | Completo: Bre-B y Nequi |
+| Envíos | `app/terminos/page.tsx` | Completo: Bogotá hasta 48 horas; otras ciudades se confirman por WhatsApp; aplican las políticas de la transportadora |
+| Tiempo de conservación de los datos | `app/privacidad/page.tsx` | Completo: cinco años |
+| Alcance del retracto para alimentos y café molido a la medida | `app/terminos/page.tsx` | **Pendiente** |
+| Encargados reales del tratamiento de datos | `app/privacidad/page.tsx` | **Pendiente** |
+
+Cuando un texto pendiente quede definitivo, se reemplaza el marcador en la página y se quita su entrada de `PENDING_LEGAL_CONTENT` en `lib/legal.ts`.
 
 Puntos para revisión profesional: retracto y sus excepciones (Ley 1480 de 2011, Decreto 587 de 2016), reversión del pago, garantía, autorización y finalidades del tratamiento de datos (Ley 1581 de 2012, Decreto 1377 de 2013) y la versión publicada de la política (`PRIVACY_POLICY_VERSION`). Los textos actuales son un borrador de trabajo: no son definitivos ni garantizan cumplimiento normativo.
 

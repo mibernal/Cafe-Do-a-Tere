@@ -80,8 +80,7 @@ export default async function PrivacyPage() {
       <section>
         <h2>Cuánto tiempo los conservamos</h2>
         <p>
-          <Pending>completar</Pending> El tiempo necesario para la entrega, la garantía y las obligaciones contables y
-          tributarias.
+          Cinco años: el tiempo necesario para la entrega, la garantía y las obligaciones contables y tributarias.
         </p>
       </section>
       <section>
