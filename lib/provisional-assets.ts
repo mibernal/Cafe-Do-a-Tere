@@ -87,3 +87,15 @@ export function packMatches(src: string, variant: { weightGrams: number; label: 
   const labelGrams = /(\d+)\s*g\b/i.exec(variant.label);
   return weight === variant.weightGrams && (!labelGrams || Number(labelGrams[1]) === weight);
 }
+
+const KNOWN_PACKS = new Set(Object.values(LABEL_TO_PACK));
+
+/**
+ * Bolsa en grano que acompaña a una bolsa molida del mismo café y peso, si
+ * existe. Sirve para variantes que venden "En grano" pero aún no tienen
+ * bean_image_url en la base (p. ej. antes de aplicar la migración 008).
+ */
+export function beansPackFor(pack: string) {
+  const candidate = pack.replace(/(?:-ground)?\.png$/, "-beans.png");
+  return candidate !== pack && KNOWN_PACKS.has(candidate) ? candidate : null;
+}

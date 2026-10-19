@@ -6,7 +6,7 @@ import type { Product, ShippingZone } from "@/lib/store-types";
 import { freshFetch } from "@/lib/supabase/admin";
 import { GRIND_OPTIONS, GROUND_GRIND_VALUES } from "@/lib/grind-options";
 import { asset, isStaticSite } from "@/lib/site-target";
-import { packFor, packMatches } from "@/lib/provisional-assets";
+import { beansPackFor, packFor, packMatches } from "@/lib/provisional-assets";
 import { site } from "@/lib/site";
 
 const ALL_GRINDS = GRIND_OPTIONS.map((option) => option.value);
@@ -129,7 +129,8 @@ function withAssetPaths(products: Product[]): Product[] {
     variants: product.variants.map((variant) => {
       const pack = packFor(variant.image);
       const label = isMissingAsset(pack) || !packMatches(pack, variant) ? product.image : pack;
-      const beans = variant.beanImage ? packFor(variant.beanImage) : null;
+      const sellsBeans = variant.grinds.includes("En grano");
+      const beans = variant.beanImage ? packFor(variant.beanImage) : sellsBeans ? beansPackFor(pack) : null;
       const beanImage = beans && !isMissingAsset(beans) && packMatches(beans, variant) ? beans : null;
       return { ...variant, image: asset(label), beanImage: beanImage ? asset(beanImage) : null };
     }),
