@@ -1,4 +1,6 @@
 import "server-only";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import type { Product, ShippingZone } from "@/lib/store-types";
 import { freshFetch } from "@/lib/supabase/admin";
@@ -119,12 +121,25 @@ function withAssetPaths(products: Product[]): Product[] {
   return products.map((product) => ({
     ...product,
     image: asset(product.image),
-    variants: product.variants.map((variant) => ({
-      ...variant,
-      image: asset(isProvisionalLabel(variant.image) ? product.image : variant.image),
-      beanImage: variant.beanImage ? asset(variant.beanImage) : null,
-    })),
+    variants: product.variants.map((variant) => {
+      const label = isProvisionalLabel(variant.image) || isMissingAsset(variant.image) ? product.image : variant.image;
+      const beanImage = variant.beanImage && !isMissingAsset(variant.beanImage) ? variant.beanImage : null;
+      return { ...variant, image: asset(label), beanImage: beanImage ? asset(beanImage) : null };
+    }),
   }));
+}
+
+/**
+ * Una presentación creada desde el panel puede apuntar a una etiqueta que
+ * todavía no está en public/ (por ejemplo, un 250 g nuevo). En el sitio
+ * estático se comprueba al construir y se usa la foto del café en su lugar,
+ * para no publicar imágenes rotas.
+ */
+function isMissingAsset(path: string) {
+  if (!isStaticSite || !path.startsWith("/assets/")) return false;
+  const missing = !existsSync(join(process.cwd(), "public", path));
+  if (missing) console.warn(`[catalog] Falta ${path} en public/: se usa la foto del café.`);
+  return missing;
 }
 
 /**
