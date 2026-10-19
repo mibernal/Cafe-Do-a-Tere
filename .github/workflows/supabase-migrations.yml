@@ -1,0 +1,129 @@
+name: Migraciones de Supabase
+
+# Aplica supabase/migrations/ a la base de datos de producción.
+# 1. "Validar" las aplica sobre un PostgreSQL vacío y corre tests/sql.
+# 2. "Aplicar" espera tu aprobación (ambiente supabase-production), muestra las
+#    migraciones pendientes y las aplica con la CLI de Supabase.
+# 3. Al terminar, vuelve a publicar el sitio para reflejar el catálogo nuevo.
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/migrations/**"]
+  workflow_dispatch:
+    inputs:
+      baseline:
+        description: >-
+          Solo la primera vez, si aplicaste migraciones a mano en el editor SQL:
+          sus versiones separadas por espacio (p. ej. 202610180001 202610180002 202610180003 202610190004).
+          Se registran como aplicadas sin ejecutarlas.
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-migrations
+  cancel-in-progress: false
+
+env:
+  SUPABASE_CLI_VERSION: 2.119.0
+
+jobs:
+  validate:
+    name: Validar en una base vacía
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash scripts/test-sql.sh
+
+  apply:
+    name: Aplicar en Supabase
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Configura este ambiente con tu aprobación obligatoria y el secreto
+    # SUPABASE_DB_URL (ver docs/despliegue.md).
+    environment: supabase-production
+    permissions:
+      contents: read
+      actions: write
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+      - name: Comprobar la conexión
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_URL en el ambiente supabase-production (cadena del Session pooler de Supabase)."
+            exit 1
+          fi
+          command -v psql >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client; }
+          psql "$SUPABASE_DB_URL" -X -tAc "select 1" >/dev/null
+      - name: Registrar migraciones aplicadas a mano
+        if: inputs.baseline != ''
+        env:
+          BASELINE: ${{ inputs.baseline }}
+        run: |
+          if ! [[ "$BASELINE" =~ ^[0-9]{12,14}([[:space:]]+[0-9]{12,14})*$ ]]; then
+            echo "::error::baseline debe ser una lista de versiones separadas por espacio, p. ej. 202610180001 202610180002"
+            exit 1
+          fi
+          # shellcheck disable=SC2086
+          supabase migration repair --status applied $BASELINE --db-url "$SUPABASE_DB_URL"
+      - name: Proteger una base con migraciones aplicadas a mano
+        run: |
+          has_schema=$(psql "$SUPABASE_DB_URL" -X -tAc "select to_regclass('public.products') is not null")
+          has_history=$(psql "$SUPABASE_DB_URL" -X -tAc "select to_regclass('supabase_migrations.schema_migrations') is not null")
+          applied=0
+          if [ "$has_history" = "t" ]; then
+            applied=$(psql "$SUPABASE_DB_URL" -X -tAc "select count(*) from supabase_migrations.schema_migrations")
+          fi
+          if [ "$has_schema" = "t" ] && [ "$applied" = "0" ]; then
+            {
+              echo "La base ya tiene las tablas de la tienda pero no tiene historial de migraciones:"
+              echo "probablemente se aplicaron a mano en el editor SQL. Para no ejecutarlas dos veces,"
+              echo "corre este workflow a mano (Run workflow) con el campo baseline lleno con las"
+              echo "versiones que ya aplicaste, por ejemplo: 202610180001 202610180002 202610180003 202610190004"
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "::error::Falta registrar las migraciones aplicadas a mano (baseline)."
+            exit 1
+          fi
+      - name: Migraciones pendientes
+        run: |
+          plan=$(supabase db push --db-url "$SUPABASE_DB_URL" --dry-run 2>&1 | tee /dev/stderr | grep '^{' | tail -1)
+          {
+            echo "### Migraciones pendientes"
+            if [ "$(jq -r '.upToDate' <<<"$plan")" = "true" ]; then
+              echo "La base de datos ya está al día."
+            else
+              jq -r '.migrations[] | "- " + .' <<<"$plan"
+            fi
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Aplicar
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --yes
+      - name: Volver a publicar el sitio
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref main --repo "$GITHUB_REPOSITORY"
