@@ -60,6 +60,7 @@ Las etiquetas de Honey Red, Honey Black, Lavado y Natural son ilustrativas: se g
 
 | Archivo esperado | Café |
 |---|---|
+| `public/assets/cafe-precision-250-front.jpg` | Tostión de precisión 250 g (creada en el panel; mientras falte, se muestra la foto del café) |
 | `public/assets/cafe-honey-red-250-front.jpg` | Honey Red 250 g |
 | `public/assets/cafe-honey-red-500-front.jpg` | Honey Red 500 g |
 | `public/assets/cafe-honey-black-250-front.jpg`, `-500-front.jpg` | Honey Black (oculto) |
