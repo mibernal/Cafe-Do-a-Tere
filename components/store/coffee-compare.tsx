@@ -7,6 +7,7 @@ import { coffeeProfile, countCoffees, type CoffeeProfile } from "@/lib/coffee-pr
 import { getGrindOption, notesPhrase } from "@/lib/grind-options";
 import { formatCOP } from "@/lib/money";
 import { useStore } from "@/components/store/store-provider";
+import { isPackShot, largestPack } from "@/lib/provisional-assets";
 
 const scales: { key: keyof Pick<CoffeeProfile, "intensity" | "acidity" | "body" | "sweetness">; label: string; hint: string }[] = [
   { key: "intensity", label: "Intensidad", hint: "Qué tan fuerte se siente" },
@@ -37,7 +38,7 @@ function priceFrom(product: Product) {
 }
 
 function packImage(product: Product) {
-  return product.variants.find((variant) => variant.image.endsWith("-front.jpg"))?.image ?? product.image;
+  return largestPack(product) ?? product.image;
 }
 
 export function CoffeeCompare() {
@@ -60,8 +61,8 @@ export function CoffeeCompare() {
                 {products.map((product) => (
                   <th key={product.id} scope="col" style={bandVars(product)}>
                     <button type="button" className="compare-head" onClick={() => showProduct(product.id)}>
-                      <span className="compare-pack">
-                        <Image src={packImage(product)} alt="" fill sizes="96px" />
+                      <span className={isPackShot(packImage(product)) ? "compare-pack is-shot" : "compare-pack"}>
+                        <Image src={packImage(product)} alt="" fill sizes="112px" />
                       </span>
                       <span className="band-ribbon">{product.process}</span>
                       <b>{product.name}</b>

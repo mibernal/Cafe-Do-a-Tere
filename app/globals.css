@@ -566,6 +566,37 @@ legend {
   transform: rotate(8deg);
 }
 
+/* Bolsas empacadas (PNG con transparencia y sombra propia). */
+.hero-bag.is-shot {
+  aspect-ratio: 4 / 5;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  filter: drop-shadow(0 18px 22px rgba(20, 12, 8, 0.38));
+}
+
+.hero-bag.is-shot img {
+  object-fit: contain;
+}
+
+.hero-bag-1.is-shot {
+  width: 40%;
+  left: -3%;
+  bottom: 2%;
+}
+
+.hero-bag-2.is-shot {
+  width: 47%;
+  left: 26%;
+  bottom: -3%;
+}
+
+.hero-bag-3.is-shot {
+  width: 40%;
+  right: -4%;
+  bottom: 3%;
+}
+
 .hero-seal {
   position: absolute;
   top: 4%;
@@ -815,6 +846,39 @@ legend {
 
 .product-visual:hover .visual-pack {
   transform: translateX(-50%) rotate(0deg) translateY(-6px);
+}
+
+.visual-pack.is-shot {
+  bottom: 0;
+  height: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  transform: translateX(-50%) rotate(-1.5deg);
+  filter: drop-shadow(0 16px 18px rgba(20, 12, 8, 0.32));
+}
+
+.visual-pack.is-shot img {
+  object-fit: contain;
+}
+
+.product-visual:hover .visual-pack.is-shot {
+  transform: translateX(-50%) rotate(0deg) translateY(-6px);
+}
+
+.pack-note {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(247, 237, 220, 0.88);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .product-badge {
@@ -1225,6 +1289,11 @@ legend {
   bottom: 15%;
 }
 
+.product-dialog-visual .visual-pack.is-shot {
+  height: 86%;
+  bottom: 7%;
+}
+
 .product-dialog-body {
   padding: 40px 36px 36px;
   display: flex;
@@ -1488,6 +1557,19 @@ legend {
   object-fit: cover;
 }
 
+.compare-pack.is-shot {
+  width: 104px;
+  aspect-ratio: 4 / 5;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 10px rgba(33, 20, 13, 0.3));
+}
+
+.compare-pack.is-shot img {
+  object-fit: contain;
+}
+
 .meter {
   display: inline-flex;
   gap: 5px;
@@ -1548,6 +1630,10 @@ legend {
 
   .compare-pack {
     width: 46px;
+  }
+
+  .compare-pack.is-shot {
+    width: 62px;
   }
 
   .meter {

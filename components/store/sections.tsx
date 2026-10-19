@@ -7,6 +7,7 @@ import { formatCOP } from "@/lib/money";
 import { site, whatsappLink, logoSrc, varietiesLabel, varietiesPhrase, altitudeText } from "@/lib/site";
 import { coffeeProfile, countCoffees } from "@/lib/coffee-profiles";
 import { asset, isStaticSite } from "@/lib/site-target";
+import { isPackShot, largestPack } from "@/lib/provisional-assets";
 
 export type NavLink = { href: string; label: string };
 
@@ -23,11 +24,12 @@ function heroLine(products: Product[]) {
   return `${countCoffees(products.length)} de la finca, de la tradición a la leña a sus microlotes, molidos para tu método.`;
 }
 
-const fallbackPacks = ["/assets/cafe-lena-250-front.jpg", "/assets/cafe-precision-500-front.jpg", "/assets/cafe-lena-500-beans-front.jpg"].map(asset);
+const fallbackPacks = ["/assets/pack-lena-500-ground.png", "/assets/pack-precision-500.png", "/assets/pack-lena-500-beans.png"].map(asset);
 
 function heroPacks(products: Product[]) {
+  // La presentación más grande de cada café, para que las bolsas se vean parejas.
   const packs = products
-    .map((product) => product.variants.find((variant) => variant.image.endsWith("-front.jpg"))?.image)
+    .map((product) => largestPack(product))
     .filter((image): image is string => Boolean(image));
   for (const image of fallbackPacks) if (packs.length < 3 && !packs.includes(image)) packs.push(image);
   return packs.slice(0, 3);
@@ -71,13 +73,13 @@ export function Hero({ options, products, showFinder }: { options: CheckoutOptio
         <div className="hero-roast">
           <Image src={asset("/assets/roasting.jpg")} alt="" fill preload fetchPriority="high" sizes="(max-width: 860px) 70vw, 34vw" />
         </div>
-        <div className="hero-bag hero-bag-1">
+        <div className={isPackShot(left) ? "hero-bag hero-bag-1 is-shot" : "hero-bag hero-bag-1"}>
           <Image src={left} alt="" fill sizes="(max-width: 860px) 32vw, 15vw" />
         </div>
-        <div className="hero-bag hero-bag-2">
+        <div className={isPackShot(center) ? "hero-bag hero-bag-2 is-shot" : "hero-bag hero-bag-2"}>
           <Image src={center} alt="" fill preload sizes="(max-width: 860px) 36vw, 17vw" />
         </div>
-        <div className="hero-bag hero-bag-3">
+        <div className={isPackShot(right) ? "hero-bag hero-bag-3 is-shot" : "hero-bag hero-bag-3"}>
           <Image src={right} alt="" fill sizes="(max-width: 860px) 32vw, 15vw" />
         </div>
         <span className="hero-seal">

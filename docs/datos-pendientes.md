@@ -53,21 +53,19 @@ La tienda no publica puntajes SCA, certificaciones, premios, reseñas, testimoni
 
 ## 4. Etiquetas e imágenes
 
-Las etiquetas de Honey Red, Honey Black, Lavado y Natural son ilustrativas: se generaron a partir de la etiqueta de Tostión de precisión. La tienda no las muestra; en su lugar usa la foto del café. Para publicar la definitiva:
+Cada presentación se muestra como su bolsa empacada (`public/assets/pack-*.png`), con la etiqueta, el peso y la molienda de esa opción: al elegir «En grano» la tienda cambia a la bolsa con la etiqueta en grano. Cómo se generan: `scripts/packaging/README.md`.
 
-1. Reemplaza el archivo en `public/assets/` con el mismo nombre (420 × 580 px, JPG).
-2. Quita la ruta de `PROVISIONAL_LABELS` en `lib/provisional-assets.ts`.
+Las etiquetas de Tostado a la leña (250 g, 500 g molido y 500 g en grano) y de Tostión de precisión (500 g) son las originales del comercio. Las demás son ilustrativas y la tienda las muestra con el aviso «Empaque ilustrativo»:
 
-| Archivo esperado | Café |
+| Etiqueta ilustrativa | De dónde sale |
 |---|---|
-| `public/assets/cafe-precision-250-front.jpg` | Tostión de precisión 250 g (creada en el panel; mientras falte, se muestra la foto del café) |
-| `public/assets/cafe-honey-red-250-front.jpg` | Honey Red 250 g |
-| `public/assets/cafe-honey-red-500-front.jpg` | Honey Red 500 g |
-| `public/assets/cafe-honey-black-250-front.jpg`, `-500-front.jpg` | Honey Black (oculto) |
-| `public/assets/cafe-lavado-250-front.jpg`, `-500-front.jpg` | Lavado (oculto) |
-| `public/assets/cafe-natural-250-front.jpg`, `-500-front.jpg` | Natural (oculto) |
+| `cafe-precision-250-front.jpg` | Tostión de precisión 500 g con el peso de 250 g |
+| `cafe-honey-red-*`, `cafe-honey-black-*`, `cafe-lavado-*`, `cafe-natural-*` (250 g y 500 g) | Etiqueta de Tostión de precisión con la cinta del proceso |
+| `cafe-*-beans-front.jpg` de esos cafés | La anterior con el ícono, la celda y el pie «en grano» de la etiqueta original de Tostado a la leña 500 g en grano |
 
-Las etiquetas de Tostado a la leña (250 g y 500 g) y de Tostión de precisión (500 g) son las originales del comercio.
+Para publicar la definitiva: reemplaza la etiqueta con el mismo nombre (420 × 580 px), vuelve a generar su bolsa y quita su nombre de `ILLUSTRATIVE_PACKS` en `lib/provisional-assets.ts`.
+
+La bolsa (kraft con válvula y zip) es una representación: si el empaque real es distinto, se ajusta en `scripts/packaging/packshots.py` y se regeneran las imágenes.
 
 ## 5. Pago en línea (cuando se migre a un hosting con servidor)
 
