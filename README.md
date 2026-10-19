@@ -2,11 +2,13 @@
 
 Tienda de Finca La Libertad (Cachipay, Cundinamarca) en **Next.js 16 (App Router), React 19 y TypeScript**, con **PostgreSQL en Supabase** y pagos con **Wompi** o **contra entrega**.
 
-- Siete cafés: Tostado a la leña, Tostión de precisión, Microlote Honey, Honey Red, Honey Black, Proceso Lavado y Proceso Natural, con presentaciones y molienda por método de preparación.
+- Tres cafés a la venta: Tostado a la leña, Tostión de precisión y el microlote Honey Red, con presentaciones y molienda por método de preparación. Lavado, Natural, Honey Black y Microlote Honey quedan creados pero ocultos, listos para publicarse desde el panel cuando haya lote.
+- "Elegir café": tabla comparativa de los cafés publicados y asistente "Ayúdame a elegir" (sabor, con o sin leche y método) que solo recomienda lo que está en la vitrina.
 - Bolsa persistente, checkout en dos pasos con ciudades y domicilio configurados en el panel, pago en línea (Wompi Web Checkout) o contra entrega.
 - Seguimiento privado del pedido, reintento de pago y cancelación por el cliente.
 - Panel `/admin` para pedidos, inventario, catálogo (textos, precios, presentaciones nuevas) y ciudades de envío.
 - Sin configuración de pagos la tienda funciona en **modo WhatsApp**: el cliente arma la bolsa y la envía con un mensaje listo.
+- **Publicada en GitHub Pages** como sitio estático en modo WhatsApp: `https://mibernal.github.io/Cafe-Do-a-Tere/`. El catálogo se lee de Supabase en cada build. CI, publicación, migraciones de Supabase con aprobación, CodeQL y Dependabot corren en GitHub Actions: ver [`docs/despliegue.md`](docs/despliegue.md).
 
 ## Desarrollo local
 
@@ -15,9 +17,14 @@ Requisitos: Node.js 20.9 o posterior.
 ```bash
 npm install
 cp .env.example .env.local
-npm run dev        # http://localhost:4173
+npm run dev            # http://localhost:4173 (app completa, con panel)
 npm run typecheck
 npm run build && npm start
+
+npm run build:pages    # sitio estático para GitHub Pages en out/
+npm run preview:pages  # http://127.0.0.1:4180/
+npm run test:pages     # pruebas en navegador del sitio estático (Playwright)
+npm run test:sql       # migraciones + pruebas SQL (necesita PostgreSQL local)
 ```
 
 Sin credenciales de Supabase la tienda muestra el catálogo de referencia (precios por confirmar) y la bolsa se envía por WhatsApp. No se crean pedidos ni se simulan pagos.
@@ -34,6 +41,7 @@ Las fuentes (Playfair Display y DM Sans, licencia OFL) están en `app/fonts/`: e
    - `202610180002_hardening_and_operations.sql`
    - `202610180003_brew_method_grinds.sql`
    - `202610190004_varieties_cod_operations.sql` (variedades nuevas, contra entrega, zonas de envío públicas, operación completa del panel)
+   - `202610190005_catalogo_vigente.sql` (deja publicados solo los tres cafés vigentes y presenta el Honey Red como microlote; no toca cafés a los que ya les confirmaste precio o cargaste inventario)
 
    La migración 004 cambia funciones que usa la app: despliega la base de datos y esta versión del código al mismo tiempo.
 3. En **Authentication → Providers → Email** desactiva el registro público (*Allow new users to sign up*). Crea la cuenta de Doña Tere y asígnale el rol desde el editor SQL (nunca en `user_metadata`, que el usuario puede editar):
@@ -55,7 +63,8 @@ Las fuentes (Playfair Display y DM Sans, licencia OFL) están en `app/fonts/`: e
 
 ### 2. Catálogo, inventario y envíos (en `/admin`)
 
-1. **Catálogo:** revisa textos, publica u oculta cada café y confirma el precio de cada presentación. Las variedades nuevas llegan publicadas con precio por confirmar y sin inventario: se ven en la tienda y se consultan por WhatsApp hasta que confirmes precio y cargues unidades. Puedes crear presentaciones nuevas (por ejemplo 1 kg).
+1. **Catálogo:** revisa textos, publica u oculta cada café y confirma el precio de cada presentación. Un café publicado sin precio confirmado se ve en la tienda y se consulta por WhatsApp hasta que confirmes precio y cargues unidades. Para lanzar una variedad oculta (Lavado, Natural, Honey Black), márcala como publicada: aparece sola en el catálogo, la comparación, el asistente y el menú. Puedes crear presentaciones nuevas (por ejemplo 1 kg).
+   Las notas de taza se editan aquí; la escala de intensidad, acidez, cuerpo y dulzor de la comparación y las reglas del asistente están en `lib/coffee-profiles.ts` (valores de referencia: ajústalos con la catación de la finca).
 2. **Inventario:** suma las unidades de cada tostión. Una presentación se vende en línea solo con precio confirmado, inventario disponible y el producto publicado.
 3. **Ciudades y domicilios:** crea cada ciudad con su tarifa, el tiempo estimado y si acepta contra entrega. El cliente elige su ciudad de esa lista y el servidor suma el domicilio.
 
@@ -114,7 +123,10 @@ El detalle de la revisión está en `docs/auditoria-2026-10.md`.
 
 ## Estructura
 
+Los archivos `*.server.ts(x)` son rutas que necesitan servidor (API, panel, seguimiento y `proxy.server.ts`): existen en el build con servidor y se omiten en el sitio estático de GitHub Pages.
+
 ```
+.github/workflows/      CI, publicación en Pages, migraciones de Supabase, CodeQL
 app/                    páginas, rutas API y estilos (globals.css)
   api/checkout          crear pedido y cancelar reserva
   api/webhooks/wompi    eventos firmados de Wompi
@@ -123,7 +135,9 @@ app/                    páginas, rutas API y estilos (globals.css)
 components/store/       tienda (bolsa, catálogo, checkout, secciones)
 components/             panel, seguimiento y páginas legales
 lib/                    catálogo, configuración, Wompi, pagos, utilidades
+scripts/                build y vista previa del sitio estático, pruebas SQL
 supabase/migrations/    esquema, funciones y datos iniciales
+tests/                  pruebas SQL (tests/sql) y en navegador (tests/e2e)
 public/assets/          fotografías y etiquetas
 legacy-prototype/       prototipo estático anterior (solo consulta)
 ```

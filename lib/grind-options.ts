@@ -76,11 +76,20 @@ export function getGrindOption(value: string) {
 
 const GENERIC_METHOD_WORDS = new Set(["Espresso", "Cafetera", "Prensa", "Cold"]);
 
+/** Método en minúscula para frases ("cafetera italiana (Moka)", "V60 o filtro manual"). */
+export function methodPhrase(value: string) {
+  const { method } = getGrindOption(value);
+  const [first, ...rest] = method.split(" ");
+  return [GENERIC_METHOD_WORDS.has(first) ? first.toLowerCase() : first, ...rest].join(" ");
+}
+
 /** Frase corta para resúmenes: "en grano" o "molienda V60 o filtro manual". */
 export function grindPhrase(value: string) {
-  const { method } = getGrindOption(value);
-  if (method === "En grano") return "en grano";
-  const [first, ...rest] = method.split(" ");
-  const lead = GENERIC_METHOD_WORDS.has(first) ? first.toLowerCase() : first;
-  return `molienda ${[lead, ...rest].join(" ")}`;
+  return getGrindOption(value).method === "En grano" ? "en grano" : `molienda ${methodPhrase(value)}`;
+}
+
+/** Notas de taza como frase: "Cacao, frutos secos, final ahumado". */
+export function notesPhrase(notes: string[]) {
+  const text = notes.map((note) => note.toLowerCase()).join(", ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

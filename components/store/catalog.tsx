@@ -6,9 +6,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle, PackageSearch, X } from "lucide-react";
 import type { Product } from "@/lib/store-types";
 import { categoryFilters, productBand, bandVars } from "@/lib/catalog-style";
-import { whatsappLink } from "@/lib/site";
+import { whatsappLink, logoSrc } from "@/lib/site";
+import { countCoffees } from "@/lib/coffee-profiles";
+import { notesPhrase } from "@/lib/grind-options";
 import { ProductPurchase, resolveSelection, type Selection } from "@/components/store/product-purchase";
 import { useStore } from "@/components/store/store-provider";
+import { isStaticSite } from "@/lib/site-target";
 
 function isLabelArt(src: string) {
   return src.endsWith("-front.jpg");
@@ -134,7 +137,7 @@ function ProductDialog({
               </div>
               <div>
                 <dt>En taza</dt>
-                <dd>{product.notes.join(", ")}</dd>
+                <dd>{notesPhrase(product.notes)}</dd>
               </div>
             </dl>
             <ProductPurchase product={product} selection={selection} onSelect={onSelect} onAdded={onClose} />
@@ -168,8 +171,8 @@ export function Catalog() {
           <div>
             <h2 id="catalog-title">Elige tu café</h2>
             <p>
-              Siete perfiles de la misma finca. Escoge presentación y molienda para tu método; lo empacamos así para
-              ti.
+              {products.length > 0 ? `${countCoffees(products.length)} de la misma finca. ` : ""}
+              Escoge presentación y molienda para tu método; lo empacamos así para ti.
             </p>
           </div>
         </header>
@@ -189,24 +192,27 @@ export function Catalog() {
           </div>
         )}
 
-        <div className="filter-bar" role="group" aria-label="Filtrar por proceso">
-          {categoryFilters
-            .filter((item) => item.id === "all" || counts[item.id])
-            .map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={filter === item.id ? "filter-chip is-active" : "filter-chip"}
-                aria-pressed={filter === item.id}
-                style={item.band ? bandVars(item.band) : undefined}
-                onClick={() => setFilter(item.id)}
-              >
-                {item.band && <i aria-hidden />}
-                {item.label}
-                <span className="filter-count">{counts[item.id]}</span>
-              </button>
-            ))}
-        </div>
+        {/* Con pocos cafés los filtros solo agregan pasos: se muestran desde cinco. */}
+        {products.length > 4 && (
+          <div className="filter-bar" role="group" aria-label="Filtrar por proceso">
+            {categoryFilters
+              .filter((item) => item.id === "all" || counts[item.id])
+              .map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={filter === item.id ? "filter-chip is-active" : "filter-chip"}
+                  aria-pressed={filter === item.id}
+                  style={item.band ? bandVars(item.band) : undefined}
+                  onClick={() => setFilter(item.id)}
+                >
+                  {item.band && <i aria-hidden />}
+                  {item.label}
+                  <span className="filter-count">{counts[item.id]}</span>
+                </button>
+              ))}
+          </div>
+        )}
 
         {visible.length === 0 ? (
           <div className="catalog-empty">
@@ -229,24 +235,28 @@ export function Catalog() {
                 highlighted={highlight === product.id}
               />
             ))}
-            {filter === "all" && (
+            {filter === "all" && products.length > 1 && (
               <aside className="catalog-tile" aria-label="Ayuda para elegir">
-                <span className="tile-photo" aria-hidden>
-                  <Image src="/assets/beans-closeup.jpg" alt="" fill sizes="300px" />
-                </span>
-                <Image src="/assets/logo-cafe-dona-tere.png" alt="" width={84} height={84} />
-                <h3>¿Te ayudamos a elegir?</h3>
-                <p>Responde dos preguntas y te sugerimos un café, ya con la molienda para tu método de preparación.</p>
-                <a className="button button-accent" href="#elegir">
-                  Ayúdame a elegir
-                </a>
-                <p className="tile-note">
-                  ¿Compras para una cafetería, oficina o un regalo corporativo?{" "}
-                  <a href={whatsappLink("Hola, Café Doña Tere. Quiero cotizar café por volumen.")} target="_blank" rel="noopener noreferrer">
-                    Cotiza por volumen
+                <Image src={logoSrc} alt="" width={84} height={84} />
+                <div className="tile-text">
+                  <h3>¿Te ayudamos a elegir?</h3>
+                  <p>Compara los cafés lado a lado o responde tres preguntas y te sugerimos uno, ya con la molienda para tu método.</p>
+                  <p className="tile-note">
+                    ¿Compras para una cafetería, oficina o un regalo corporativo?{" "}
+                    <a href={whatsappLink("Hola, Café Doña Tere. Quiero cotizar café por volumen.")} target="_blank" rel="noopener noreferrer">
+                      Cotiza por volumen
+                    </a>
+                    .
+                  </p>
+                </div>
+                <div className="tile-actions">
+                  <a className="button button-accent" href="#elegir">
+                    Ayúdame a elegir
                   </a>
-                  .
-                </p>
+                  <a className="button button-ghost" href="#comparar">
+                    Comparar cafés
+                  </a>
+                </div>
               </aside>
             )}
           </div>
@@ -256,7 +266,9 @@ export function Catalog() {
           <p className="price-disclosure">
             {options.ordersEnabled
               ? "Los cafés con precio por confirmar se piden por WhatsApp mientras la finca define su lote. Los demás se pagan aquí mismo."
-              : "Mientras habilitamos el pago en línea, tu bolsa se envía por WhatsApp y confirmamos contigo precio, disponibilidad y domicilio antes de cobrar."}
+              : isStaticSite
+                ? "Tu bolsa se envía por WhatsApp y confirmamos contigo precio, disponibilidad y domicilio antes de cobrar."
+                : "Mientras habilitamos el pago en línea, tu bolsa se envía por WhatsApp y confirmamos contigo precio, disponibilidad y domicilio antes de cobrar."}
           </p>
         )}
       </div>

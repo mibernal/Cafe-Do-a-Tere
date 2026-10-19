@@ -121,30 +121,37 @@ export function StoreProvider({
   const [draft, setDraft] = useState<CheckoutDraft>(emptyDraft);
   const toastId = useRef(0);
 
-  // Restaura la bolsa descartando líneas que ya no existen en el catálogo.
+  const notify = useCallback((message: string, tone: Toast["tone"] = "success") => {
+    const id = ++toastId.current;
+    setToasts((current) => [...current.slice(-2), { id, tone, message }]);
+    window.setTimeout(() => setToasts((current) => current.filter((toast) => toast.id !== id)), tone === "error" ? 6000 : 3200);
+  }, []);
+
+  // Restaura la bolsa descartando líneas que ya no existen en el catálogo
+  // (un café que se dejó de publicar, una molienda retirada) y avisa.
   useEffect(() => {
     const saved = readStorage<unknown>(CART_KEY, []);
     if (Array.isArray(saved)) {
-      setCart(
-        saved
-          .filter((line): line is CartLine => {
-            if (
-              !line ||
-              typeof line.productId !== "string" ||
-              typeof line.variantId !== "string" ||
-              typeof line.grind !== "string" ||
-              line.grind.length > 40 ||
-              !Number.isInteger(line.quantity) ||
-              line.quantity < 1 ||
-              line.quantity > MAX_UNITS_PER_LINE
-            )
-              return false;
-            const product = products.find((item) => item.id === line.productId);
-            const variant = product?.variants.find((item) => item.id === line.variantId);
-            return Boolean(variant?.grinds.includes(line.grind));
-          })
-          .slice(0, MAX_LINES),
-      );
+      const restored = saved
+        .filter((line): line is CartLine => {
+          if (
+            !line ||
+            typeof line.productId !== "string" ||
+            typeof line.variantId !== "string" ||
+            typeof line.grind !== "string" ||
+            line.grind.length > 40 ||
+            !Number.isInteger(line.quantity) ||
+            line.quantity < 1 ||
+            line.quantity > MAX_UNITS_PER_LINE
+          )
+            return false;
+          const product = products.find((item) => item.id === line.productId);
+          const variant = product?.variants.find((item) => item.id === line.variantId);
+          return Boolean(variant?.grinds.includes(line.grind));
+        })
+        .slice(0, MAX_LINES);
+      setCart(restored);
+      if (restored.length < saved.length) notify("Retiramos de tu bolsa un café que ya no está disponible.", "info");
     }
     const order = readStorage<PendingOrder | null>(ORDER_KEY, null);
     if (
@@ -157,17 +164,11 @@ export function StoreProvider({
       setPendingOrder(order);
     }
     setLoaded(true);
-  }, [products]);
+  }, [products, notify]);
 
   useEffect(() => {
     if (loaded) writeStorage(CART_KEY, cart);
   }, [cart, loaded]);
-
-  const notify = useCallback((message: string, tone: Toast["tone"] = "success") => {
-    const id = ++toastId.current;
-    setToasts((current) => [...current.slice(-2), { id, tone, message }]);
-    window.setTimeout(() => setToasts((current) => current.filter((toast) => toast.id !== id)), tone === "error" ? 6000 : 3200);
-  }, []);
 
   const lines = useMemo(
     () =>

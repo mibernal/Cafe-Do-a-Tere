@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PolicyLayout } from "@/components/policy-layout";
 import { site, whatsappLink } from "@/lib/site";
+import { renderPerRequest } from "@/lib/request-time";
+import { isStaticSite } from "@/lib/site-target";
 
 export const metadata: Metadata = { title: "Tratamiento de datos personales" };
-export const dynamic = "force-dynamic";
-
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  await renderPerRequest();
   return (
     <PolicyLayout
       title="Tratamiento de datos personales"
@@ -21,17 +22,32 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>Qué datos usamos</h2>
-        <p>
-          Para gestionar un pedido pedimos nombre, correo, celular, ciudad, dirección e indicaciones de entrega. Si
-          solicitas factura electrónica, también tipo y número de documento. No pedimos ni almacenamos datos de tarjetas,
-          claves bancarias ni códigos de seguridad.
-        </p>
+        {isStaticSite ? (
+          <p>
+            Este sitio no tiene formularios ni cuentas: la bolsa se guarda solo en tu navegador y el pedido nos llega
+            cuando lo envías por WhatsApp. Para gestionarlo te pedimos por ese canal nombre, celular, ciudad, dirección e
+            indicaciones de entrega y, si solicitas factura electrónica, tipo y número de documento. No pedimos datos de
+            tarjetas, claves bancarias ni códigos de seguridad.
+          </p>
+        ) : (
+          <p>
+            Para gestionar un pedido pedimos nombre, correo, celular, ciudad, dirección e indicaciones de entrega. Si
+            solicitas factura electrónica, también tipo y número de documento. No pedimos ni almacenamos datos de
+            tarjetas, claves bancarias ni códigos de seguridad.
+          </p>
+        )}
       </section>
       <section>
         <h2>Para qué los usamos</h2>
         <ul>
-          <li>Registrar el pedido, coordinar la entrega y confirmar pedidos contra entrega.</li>
-          <li>Confirmar el estado del pago. Los pagos en línea se procesan en el checkout de Wompi; le compartimos tu nombre, correo, celular y documento (si lo diste) para prellenar el pago.</li>
+          {isStaticSite ? (
+            <li>Registrar el pedido, confirmar el pago y coordinar la entrega.</li>
+          ) : (
+            <>
+              <li>Registrar el pedido, coordinar la entrega y confirmar pedidos contra entrega.</li>
+              <li>Confirmar el estado del pago. Los pagos en línea se procesan en el checkout de Wompi; le compartimos tu nombre, correo, celular y documento (si lo diste) para prellenar el pago.</li>
+            </>
+          )}
           <li>Emitir la factura electrónica cuando la solicitas.</li>
           <li>Responder solicitudes sobre tu compra.</li>
         </ul>
@@ -39,8 +55,10 @@ export default function PrivacyPage() {
       <section>
         <h2>Quién más los procesa</h2>
         <p>
-          [Completar con los encargados reales.] Por ejemplo: el proveedor de base de datos y alojamiento de la tienda,
-          la pasarela de pagos Wompi y la empresa de mensajería que entrega el pedido.
+          [Completar con los encargados reales.] Por ejemplo:{" "}
+          {isStaticSite
+            ? "WhatsApp (Meta), por donde nos llega el pedido, y la empresa de mensajería que lo entrega."
+            : "el proveedor de base de datos y alojamiento de la tienda, la pasarela de pagos Wompi y la empresa de mensajería que entrega el pedido."}
         </p>
       </section>
       <section>

@@ -89,3 +89,8 @@ export const processSpectrum = [
     text: "El fruto se seca completo. Taza frutal, dulce y de cuerpo sedoso.",
   },
 ] as const;
+
+/** Cuántos procesos del recorrido están publicados (la sección pide al menos tres). */
+export function spectrumStopCount(products: Pick<Product, "id">[]) {
+  return processSpectrum.filter((stop) => products.some((product) => product.id === stop.productId)).length;
+}

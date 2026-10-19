@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PolicyLayout } from "@/components/policy-layout";
 import { site, whatsappLink } from "@/lib/site";
+import { renderPerRequest } from "@/lib/request-time";
+import { isStaticSite } from "@/lib/site-target";
 
 export const metadata: Metadata = { title: "Términos de compra" };
-export const dynamic = "force-dynamic";
-
-export default function TermsPage() {
+export default async function TermsPage() {
+  await renderPerRequest();
   return (
     <PolicyLayout
       title="Términos de compra"
@@ -21,19 +22,33 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>Precios y disponibilidad</h2>
-        <p>
-          Los precios están en pesos colombianos e incluyen los impuestos aplicables [confirmar]. El domicilio se suma
-          según la ciudad y se muestra antes de pagar. Las unidades se reservan mientras completas el pago en línea (35
-          minutos) o mientras confirmamos un pedido contra entrega (hasta 72 horas).
-        </p>
+        {isStaticSite ? (
+          <p>
+            Los precios están en pesos colombianos e incluyen los impuestos aplicables [confirmar]. Los pedidos se hacen
+            por WhatsApp: antes de pagar te confirmamos disponibilidad, valor del domicilio según tu ciudad y total.
+          </p>
+        ) : (
+          <p>
+            Los precios están en pesos colombianos e incluyen los impuestos aplicables [confirmar]. El domicilio se suma
+            según la ciudad y se muestra antes de pagar. Las unidades se reservan mientras completas el pago en línea (35
+            minutos) o mientras confirmamos un pedido contra entrega (hasta 72 horas).
+          </p>
+        )}
       </section>
       <section>
         <h2>Medios de pago</h2>
-        <p>
-          Pago en línea a través de Wompi (tarjetas, PSE, Nequi, Botón Bancolombia y otros medios habilitados) y, en las
-          ciudades habilitadas, pago en efectivo contra entrega hasta el monto indicado en la tienda. El pedido en línea se
-          confirma solo cuando Wompi aprueba el pago.
-        </p>
+        {isStaticSite ? (
+          <p>
+            Acordamos el medio de pago contigo por WhatsApp al confirmar el pedido [completar los medios aceptados]. El
+            pedido queda confirmado cuando te enviamos la confirmación por ese mismo canal.
+          </p>
+        ) : (
+          <p>
+            Pago en línea a través de Wompi (tarjetas, PSE, Nequi, Botón Bancolombia y otros medios habilitados) y, en las
+            ciudades habilitadas, pago en efectivo contra entrega hasta el monto indicado en la tienda. El pedido en línea
+            se confirma solo cuando Wompi aprueba el pago.
+          </p>
+        )}
       </section>
       <section>
         <h2>Envíos</h2>

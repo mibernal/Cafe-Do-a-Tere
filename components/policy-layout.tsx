@@ -1,13 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { logoSrc } from "@/lib/site";
 
 export function PolicyLayout({ title, draftNote, children }: { title: string; draftNote?: string; children: React.ReactNode }) {
   return (
     <main className="policy-page">
       <header className="tracking-header">
         <Link className="brand" href="/">
-          <Image src="/assets/logo-cafe-dona-tere.png" alt="" width={46} height={46} />
+          <Image src={logoSrc} alt="" width={46} height={46} />
           <span>
             <strong>Café Doña Tere</strong>
             <small>Finca La Libertad, Cachipay</small>

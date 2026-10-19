@@ -1,6 +1,7 @@
 import "server-only";
 import { hasDatabaseConfig } from "@/lib/supabase/admin";
 import type { CheckoutOptions } from "@/lib/store-types";
+import { isStaticSite } from "@/lib/site-target";
 
 const DEFAULT_COD_MAX_COP = 300_000;
 
@@ -51,6 +52,10 @@ function codMaxCop() {
  * comercio lo decide explícitamente y la configuración mínima está completa.
  */
 export function getStoreReadiness(): CheckoutOptions {
+  // El sitio estático no tiene servidor que firme pagos ni registre pedidos:
+  // la bolsa se envía por WhatsApp, sin importar las variables configuradas.
+  if (isStaticSite) return { ordersEnabled: false, wompiEnabled: false, codEnabled: false, codMaxCop: codMaxCop() };
+
   const baseReady =
     process.env.STORE_CHECKOUT_ENABLED === "true" &&
     privacyPolicyVersion() !== null &&

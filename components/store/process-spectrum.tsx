@@ -12,7 +12,7 @@ export function ProcessSpectrum() {
   const stops = processSpectrum
     .map((stop) => ({ ...stop, product: products.find((product) => product.id === stop.productId) }))
     .filter((stop) => stop.product);
-  if (stops.length < 2) return null;
+  if (stops.length < 3) return null;
 
   return (
     <section className="process-section" id="procesos" aria-labelledby="process-title">

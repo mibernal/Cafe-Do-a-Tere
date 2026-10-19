@@ -1,6 +1,11 @@
 // Datos públicos del comercio. Se pueden ajustar sin tocar el código con las
 // variables NEXT_PUBLIC_* (se incrustan en el navegador durante el build).
 
+import { asset } from "@/lib/site-target";
+
+/** Logo en 264 px (2x del tamaño más grande en pantalla). */
+export const logoSrc = asset("/assets/logo-cafe-dona-tere.webp");
+
 const whatsappNumber = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "573124193753").replace(/\D/g, "");
 
 export const site = {

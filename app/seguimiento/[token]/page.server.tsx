@@ -11,7 +11,7 @@ import { getStoreReadiness } from "@/lib/store-config";
 import { isWompiTransactionId, wompiCheckoutForm } from "@/lib/wompi";
 import { reconcileReturnedTransaction } from "@/lib/payments";
 import { grindPhrase } from "@/lib/grind-options";
-import { site, whatsappLink } from "@/lib/site";
+import { site, whatsappLink, logoSrc } from "@/lib/site";
 import { AutoRefresh, CancelOrderButton } from "@/components/tracking-actions";
 
 export const dynamic = "force-dynamic";
@@ -148,7 +148,7 @@ export default async function TrackingPage({
     <main className="tracking-page">
       <header className="tracking-header">
         <Link className="brand" href="/">
-          <Image src="/assets/logo-cafe-dona-tere.png" alt="" width={46} height={46} />
+          <Image src={logoSrc} alt="" width={46} height={46} />
           <span>
             <strong>Café Doña Tere</strong>
             <small>Seguimiento de pedido</small>

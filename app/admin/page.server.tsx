@@ -8,6 +8,7 @@ import { createAdminClient, hasDatabaseConfig } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin-auth";
 import { formatCOP } from "@/lib/money";
 import { getStoreReadiness, privacyPolicyVersion, wompiKeysMatchEnvironment } from "@/lib/store-config";
+import { logoSrc } from "@/lib/site";
 import {
   CatalogManager,
   InventoryTable,
@@ -40,7 +41,7 @@ type Metrics = {
 function AdminBrand({ subtitle }: { subtitle: string }) {
   return (
     <Link className="brand" href="/">
-      <Image src="/assets/logo-cafe-dona-tere.png" alt="" width={44} height={44} />
+      <Image src={logoSrc} alt="" width={44} height={44} />
       <span>
         <strong>Café Doña Tere</strong>
         <small>{subtitle}</small>

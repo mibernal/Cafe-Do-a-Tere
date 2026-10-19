@@ -4,7 +4,34 @@ import { MessageCircle } from "lucide-react";
 import type { CheckoutOptions, Product } from "@/lib/store-types";
 import { productBand, bandVars } from "@/lib/catalog-style";
 import { formatCOP } from "@/lib/money";
-import { site, whatsappLink } from "@/lib/site";
+import { site, whatsappLink, logoSrc } from "@/lib/site";
+import { coffeeProfile, countCoffees } from "@/lib/coffee-profiles";
+import { asset, isStaticSite } from "@/lib/site-target";
+
+export type NavLink = { href: string; label: string };
+
+function joinNames(names: string[]) {
+  return names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}`;
+}
+
+function heroLine(products: Product[]) {
+  if (products.length === 0) return "Estamos preparando el próximo lote de la finca.";
+  if (products.length === 1) return `Nuestro ${products[0].name}, molido para tu método.`;
+  if (products.length <= 3) {
+    return `${joinNames(products.map((product) => product.name))}: ${countCoffees(products.length).toLowerCase()} de la finca, molidos para tu método.`;
+  }
+  return `${countCoffees(products.length)} de la finca, de la tradición a la leña a sus microlotes, molidos para tu método.`;
+}
+
+const fallbackPacks = ["/assets/cafe-lena-250-front.jpg", "/assets/cafe-precision-500-front.jpg", "/assets/cafe-lena-500-beans-front.jpg"].map(asset);
+
+function heroPacks(products: Product[]) {
+  const packs = products
+    .map((product) => product.variants.find((variant) => variant.image.endsWith("-front.jpg"))?.image)
+    .filter((image): image is string => Boolean(image));
+  for (const image of fallbackPacks) if (packs.length < 3 && !packs.includes(image)) packs.push(image);
+  return packs.slice(0, 3);
+}
 
 export function paymentSentence(options: CheckoutOptions) {
   if (options.wompiEnabled && options.codEnabled)
@@ -14,7 +41,9 @@ export function paymentSentence(options: CheckoutOptions) {
   return "Arma tu bolsa y envíanosla por WhatsApp: confirmamos precio, domicilio y forma de pago contigo.";
 }
 
-export function Hero({ options }: { options: CheckoutOptions }) {
+export function Hero({ options, products, showFinder }: { options: CheckoutOptions; products: Product[]; showFinder: boolean }) {
+  // La bolsa del centro es el primer café de la vitrina.
+  const [center, left, right] = heroPacks(products);
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-copy">
@@ -23,31 +52,33 @@ export function Hero({ options }: { options: CheckoutOptions }) {
         </p>
         <h1 id="hero-title">Café con alma de abuela</h1>
         <p className="hero-lead">
-          Lo cultivamos en las montañas de Cachipay y lo tostamos con calma, como lo hacía Doña Tere. Siete perfiles,
-          de la tradición a la leña a los honeys de la finca, molidos para tu método.
+          Lo cultivamos en las montañas de Cachipay y lo tostamos con calma, como lo hacía Doña Tere.{" "}
+          {heroLine(products)}
         </p>
         <div className="hero-actions">
           <a className="button button-accent" href="#cafes">
             Comprar café
           </a>
-          <a className="button button-ghost" href="#elegir">
-            Ayúdame a elegir
-          </a>
+          {showFinder && (
+            <a className="button button-ghost" href="#elegir">
+              Ayúdame a elegir
+            </a>
+          )}
         </div>
         <p className="hero-payments">{paymentSentence(options)}</p>
       </div>
       <div className="hero-art" aria-hidden>
         <div className="hero-roast">
-          <Image src="/assets/roasting.jpg" alt="" fill preload sizes="(max-width: 860px) 70vw, 34vw" />
+          <Image src={asset("/assets/roasting.jpg")} alt="" fill preload sizes="(max-width: 860px) 70vw, 34vw" />
         </div>
         <div className="hero-bag hero-bag-1">
-          <Image src="/assets/cafe-lena-250-front.jpg" alt="" fill sizes="(max-width: 860px) 32vw, 15vw" />
+          <Image src={left} alt="" fill sizes="(max-width: 860px) 32vw, 15vw" />
         </div>
         <div className="hero-bag hero-bag-2">
-          <Image src="/assets/cafe-precision-500-front.jpg" alt="" fill preload sizes="(max-width: 860px) 36vw, 17vw" />
+          <Image src={center} alt="" fill preload sizes="(max-width: 860px) 36vw, 17vw" />
         </div>
         <div className="hero-bag hero-bag-3">
-          <Image src="/assets/cafe-honey-black-500-front.jpg" alt="" fill sizes="(max-width: 860px) 32vw, 15vw" />
+          <Image src={right} alt="" fill sizes="(max-width: 860px) 32vw, 15vw" />
         </div>
         <span className="hero-seal">
           100%
@@ -62,7 +93,10 @@ export function Hero({ options }: { options: CheckoutOptions }) {
 export function VarietyRibbon({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
   const items = products.map((product) => ({ id: product.id, label: product.process, band: productBand(product) }));
-  const track = [...items, ...items];
+  // Cada mitad de la cinta debe superar el ancho de la pantalla para que el
+  // ciclo no deje huecos, también con pocos cafés.
+  const half = Array.from({ length: Math.max(1, Math.ceil(8 / items.length)) }, () => items).flat();
+  const track = [...half, ...half];
   return (
     <div className="variety-ribbon" aria-hidden>
       <div className="ribbon-track">
@@ -109,10 +143,10 @@ export function OriginSection() {
       <div className="section-shell origin-layout">
         <div className="origin-visual">
           <div className="origin-photo">
-            <Image src="/assets/beans-closeup.jpg" alt="Granos de café tostados en Finca La Libertad" fill sizes="(max-width: 860px) 80vw, 420px" />
+            <Image src={asset("/assets/beans-closeup.jpg")} alt="Granos de café tostados en Finca La Libertad" fill sizes="(max-width: 860px) 80vw, 420px" />
           </div>
           <div className="origin-photo origin-photo-small">
-            <Image src="/assets/roasting.jpg" alt="Tostión del café en paila a la leña" fill sizes="(max-width: 860px) 40vw, 200px" />
+            <Image src={asset("/assets/roasting.jpg")} alt="Tostión del café en paila a la leña" fill sizes="(max-width: 860px) 40vw, 200px" />
           </div>
         </div>
         <div className="origin-copy">
@@ -156,7 +190,12 @@ export function HowToBuy({ options }: { options: CheckoutOptions }) {
         ? `${options.wompiEnabled ? "En línea con Wompi" : ""}${options.wompiEnabled && options.codEnabled ? " o " : ""}${options.codEnabled ? `contra entrega en pedidos hasta ${formatCOP(options.codMaxCop)}` : ""}.`
         : "Te confirmamos precio, domicilio y forma de pago por WhatsApp.",
     },
-    { title: "Recíbelo en casa", text: "Sigue el pedido con tu enlace privado hasta que llegue a tu puerta." },
+    {
+      title: "Recíbelo en casa",
+      text: options.ordersEnabled
+        ? "Sigue el pedido con tu enlace privado hasta que llegue a tu puerta."
+        : "Te avisamos por WhatsApp cuando salga de la finca y hasta que llegue a tu puerta.",
+    },
   ];
   return (
     <section className="howto" aria-labelledby="howto-title">
@@ -175,16 +214,40 @@ export function HowToBuy({ options }: { options: CheckoutOptions }) {
   );
 }
 
-export function Faq({ options }: { options: CheckoutOptions }) {
+export function Faq({ options, products }: { options: CheckoutOptions; products: Product[] }) {
+  const categories = new Set(products.map((product) => product.category));
   const questions: { q: string; a: React.ReactNode }[] = [
     {
       q: "¿De dónde viene el café?",
       a: "De Finca La Libertad, en Cachipay, Cundinamarca, entre 1.450 y 1.650 metros sobre el nivel del mar. Es café excelso 100% arábica, cultivado y tostado por la familia.",
     },
-    {
+  ];
+  if (products.length > 1) {
+    questions.push({
+      q: "¿Qué diferencia hay entre los cafés?",
+      a: (
+        <ul className="faq-points">
+          {products.map((product) => (
+            <li key={product.id}>
+              <b>{product.name}.</b> {coffeeProfile(product).pitch || product.subtitle}
+            </li>
+          ))}
+        </ul>
+      ),
+    });
+  }
+  if (categories.has("washed") || categories.has("natural")) {
+    questions.push({
       q: "¿Qué diferencia hay entre lavado, honey y natural?",
-      a: "Es cuánta fruta acompaña al grano mientras se seca. El lavado se seca limpio y da una taza brillante; los honey conservan parte de la miel del fruto (más en el Red y todo en el Black) y ganan dulzor y cuerpo; el natural se seca dentro de la cereza entera y es el más frutal.",
-    },
+      a: "Es cuánta fruta acompaña al grano mientras se seca. El lavado se seca limpio y da una taza brillante; los honey conservan parte de la miel del fruto y ganan dulzor y cuerpo; el natural se seca dentro de la cereza entera y es el más frutal.",
+    });
+  } else if (categories.has("honey")) {
+    questions.push({
+      q: "¿Qué es un café honey?",
+      a: "Es un proceso en el que el grano se seca con parte de la miel (el mucílago) de su fruto. Eso le da más dulzor y cuerpo que un café lavado. En el Honey Red se conserva buena parte de esa miel y el secado es más pausado.",
+    });
+  }
+  questions.push(
     {
       q: "¿Puedo escoger la molienda?",
       a: "Sí. Cada presentación muestra las moliendas disponibles: espresso, moka, V60, cafetera eléctrica, Chemex, prensa francesa, AeroPress, cold brew o en grano para moler en casa.",
@@ -199,16 +262,22 @@ export function Faq({ options }: { options: CheckoutOptions }) {
             `También puedes pagar en efectivo contra entrega en las ciudades habilitadas, para pedidos hasta ${formatCOP(options.codMaxCop)}.`}
         </>
       ) : (
-        "Mientras habilitamos el pago en línea, confirmamos tu pedido por WhatsApp y te compartimos un enlace de pago de Wompi o las instrucciones de pago."
+        isStaticSite
+          ? "Confirmamos tu pedido por WhatsApp y ahí te compartimos los medios de pago disponibles."
+          : "Mientras habilitamos el pago en línea, confirmamos tu pedido por WhatsApp y te compartimos un enlace de pago de Wompi o las instrucciones de pago."
       ),
     },
     {
       q: "¿Cuánto cuesta y cuánto tarda el envío?",
-      a: "El domicilio depende de tu ciudad. Lo ves antes de pagar, junto con el tiempo estimado de entrega. Si tu ciudad no aparece, escríbenos y lo cotizamos.",
+      a: options.ordersEnabled
+        ? "El domicilio depende de tu ciudad. Lo ves antes de pagar, junto con el tiempo estimado de entrega. Si tu ciudad no aparece, escríbenos y lo cotizamos."
+        : "El domicilio depende de tu ciudad. Te lo confirmamos por WhatsApp antes de pagar, junto con el tiempo estimado de entrega.",
     },
     {
       q: "¿Cómo sé en qué va mi pedido?",
-      a: "Al terminar la compra te llevamos a una página de seguimiento con un enlace privado. Guárdalo: ahí ves la confirmación del pago, la preparación y el despacho.",
+      a: options.ordersEnabled
+        ? "Al terminar la compra te llevamos a una página de seguimiento con un enlace privado. Guárdalo: ahí ves la confirmación del pago, la preparación y el despacho."
+        : "Te contamos por WhatsApp cuando confirmamos el pago, cuando preparamos tu café y cuando sale de la finca.",
     },
     {
       q: "¿Y si tengo un problema con mi pedido?",
@@ -219,9 +288,9 @@ export function Faq({ options }: { options: CheckoutOptions }) {
         </>
       ),
     },
-  ];
+  );
   if (options.codEnabled) {
-    questions.splice(4, 0, {
+    questions.splice(questions.findIndex((item) => item.q.startsWith("¿Cuánto cuesta")), 0, {
       q: "¿Cómo funciona el pago contra entrega?",
       a: "Eliges “Contra entrega” al finalizar. Te contactamos para confirmar el pedido y, al recibirlo, pagas el total en efectivo a quien lo entrega. Si no logramos confirmarlo en 72 horas, liberamos el pedido.",
     });
@@ -253,7 +322,7 @@ export function Faq({ options }: { options: CheckoutOptions }) {
 export function ClosingCta() {
   return (
     <section className="closing" aria-labelledby="closing-title">
-      <Image src="/assets/logo-cafe-dona-tere.png" alt="" width={132} height={132} className="closing-logo" />
+      <Image src={logoSrc} alt="" width={132} height={132} className="closing-logo" />
       <h2 id="closing-title">Una buena taza cambia la mañana</h2>
       <p>Elige el tuyo y nosotros lo tostamos, molemos y enviamos desde la finca.</p>
       <a className="button button-accent" href="#cafes">
@@ -263,12 +332,13 @@ export function ClosingCta() {
   );
 }
 
-export function SiteFooter({ options }: { options: CheckoutOptions }) {
+export function SiteFooter({ options, nav }: { options: CheckoutOptions; nav: NavLink[] }) {
+  const storeLinks = nav.filter((link) => ["#cafes", "#comparar", "#elegir", "#procesos"].includes(link.href));
   return (
     <footer className="site-footer">
       <div className="footer-grid">
         <div className="footer-brand">
-          <Image src="/assets/logo-cafe-dona-tere.png" alt="" width={64} height={64} />
+          <Image src={logoSrc} alt="" width={64} height={64} />
           <p>
             <strong>{site.name}</strong>
             {site.farm}, {site.town}, {site.region}.
@@ -276,9 +346,11 @@ export function SiteFooter({ options }: { options: CheckoutOptions }) {
         </div>
         <nav aria-label="Tienda">
           <h2>Tienda</h2>
-          <a href="#cafes">Cafés</a>
-          <a href="#procesos">Procesos</a>
-          <a href="#elegir">Ayúdame a elegir</a>
+          {storeLinks.map((link) => (
+            <a key={link.href} href={link.href}>
+              {link.label}
+            </a>
+          ))}
         </nav>
         <nav aria-label="Ayuda">
           <h2>Ayuda</h2>

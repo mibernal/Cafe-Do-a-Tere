@@ -1,8 +1,36 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  poweredByHeader: false,
+// Dos destinos de build (ver lib/site-target.ts):
+// - servidor (por defecto): la app completa.
+// - NEXT_PUBLIC_SITE_TARGET=pages: exportación estática para GitHub Pages.
+//   Los archivos *.server.ts(x) (API, panel, seguimiento y proxy) solo existen
+//   en el destino con servidor; en la exportación estática no se compilan.
+const staticSite = process.env.NEXT_PUBLIC_SITE_TARGET === "pages";
+
+function pagesBasePath() {
+  const value = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").trim().replace(/\/+$/, "");
+  if (value && !/^\/[A-Za-z0-9._~-]+(\/[A-Za-z0-9._~-]+)*$/.test(value)) {
+    throw new Error(`NEXT_PUBLIC_BASE_PATH no es válido: "${value}". Usa "" o algo como "/Cafe-Do-a-Tere".`);
+  }
+  return value;
+}
+
+const basePath = staticSite ? pagesBasePath() : "";
+
+const staticConfig: NextConfig = {
+  output: "export",
+  basePath,
+  // GitHub Pages sirve /terminos/ como /terminos/index.html.
+  trailingSlash: true,
+  // Sin servidor no hay optimizador de imágenes: se sirven tal cual.
+  images: { unoptimized: true },
+  pageExtensions: ["tsx", "ts"],
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
+};
+
+const serverConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+  pageExtensions: ["server.tsx", "server.ts", "tsx", "ts"],
   async headers() {
     return [
       {
@@ -55,6 +83,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+};
+
+const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  ...(staticSite ? staticConfig : serverConfig),
 };
 
 export default nextConfig;

@@ -9,3 +9,8 @@ coverage/
 *.tsbuildinfo
 supabase/.temp/
 .vercel/
+
+# Pruebas en navegador
+/test-results/
+/playwright-report/
+/blob-report/

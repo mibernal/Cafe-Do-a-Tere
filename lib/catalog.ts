@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Product, ShippingZone } from "@/lib/store-types";
 import { freshFetch } from "@/lib/supabase/admin";
 import { GRIND_OPTIONS, GROUND_GRIND_VALUES } from "@/lib/grind-options";
+import { asset, isStaticSite } from "@/lib/site-target";
 
 const ALL_GRINDS = GRIND_OPTIONS.map((option) => option.value);
 
@@ -28,8 +29,10 @@ function referenceVariant(
 }
 
 /**
- * Catálogo de referencia para explorar la tienda sin base de datos. Los
- * precios no están confirmados y el checkout permanece cerrado.
+ * Catálogo de referencia para explorar la tienda sin base de datos: los tres
+ * cafés que la finca ofrece hoy. Los precios no están confirmados y el
+ * checkout permanece cerrado. Lavado, Natural y Honey Black existen en la base
+ * de datos, ocultos hasta que haya lote.
  */
 export const previewCatalog: Product[] = [
   {
@@ -73,100 +76,22 @@ export const previewCatalog: Product[] = [
     ],
   },
   {
-    id: "honey",
-    slug: "microlote-honey",
-    category: "honey",
-    name: "Microlote Honey",
-    subtitle: "Una edición para descubrir",
-    description:
-      "Una expresión pequeña de la finca: cuerpo medio-alto, acidez media y una taza para tomar sin afán.",
-    process: "Honey, microlote",
-    origin: "Finca La Libertad, Cachipay",
-    altitude: "Altura por confirmar",
-    notes: ["Cuerpo medio-alto", "Acidez media", "Lote pequeño"],
-    badge: "Edición limitada",
-    image: "/assets/cafe-honey-beans-closeup.jpg",
-    variants: [
-      referenceVariant("honey-340", "340 g (referencia)", 340, "/assets/cafe-honey-beans-closeup.jpg", {
-        priceCop: 35000,
-        grinds: [...GROUND_GRIND_VALUES],
-      }),
-    ],
-  },
-  {
-    id: "lavado",
-    slug: "proceso-lavado",
-    category: "washed",
-    name: "Proceso Lavado",
-    subtitle: "Limpio, brillante y equilibrado",
-    description:
-      "El método clásico de Colombia: el grano se despulpa, se fermenta y se lava antes del secado. El resultado es una taza limpia, de acidez brillante y dulzor equilibrado.",
-    process: "Lavado",
-    origin: "Finca La Libertad, Cachipay",
-    altitude: "Altura por confirmar",
-    notes: ["Taza limpia", "Acidez brillante", "Dulzor equilibrado"],
-    badge: "Nuevo proceso",
-    image: "/assets/beans.jpg",
-    variants: [
-      referenceVariant("lavado-250", "250 g", 250, "/assets/cafe-lavado-250-front.jpg"),
-      referenceVariant("lavado-500", "500 g", 500, "/assets/cafe-lavado-500-front.jpg"),
-    ],
-  },
-  {
-    id: "natural",
-    slug: "proceso-natural",
-    category: "natural",
-    name: "Proceso Natural",
-    subtitle: "Fruta madura y cuerpo sedoso",
-    description:
-      "La cereza se seca entera, sin despulpar, para que la fruta entregue sus azúcares al grano. Una taza intensa y dulce, con recuerdos de fruta, chocolate y caramelo.",
-    process: "Natural",
-    origin: "Finca La Libertad, Cachipay",
-    altitude: "Altura por confirmar",
-    notes: ["Fruta madura", "Chocolate", "Caramelo"],
-    badge: "Nuevo proceso",
-    image: "/assets/beans-closeup.jpg",
-    variants: [
-      referenceVariant("natural-250", "250 g", 250, "/assets/cafe-natural-250-front.jpg"),
-      referenceVariant("natural-500", "500 g", 500, "/assets/cafe-natural-500-front.jpg"),
-    ],
-  },
-  {
     id: "honey-red",
     slug: "honey-red",
     category: "honey",
     name: "Honey Red",
-    subtitle: "Dulzor profundo, secado pausado",
+    subtitle: "Microlote de la finca",
     description:
-      "Conservamos buena parte del mucílago y secamos el grano con calma. Una taza dulce y redonda, con más cuerpo que el honey clásico y notas de fruta roja y panela.",
+      "Un lote pequeño de la finca en proceso honey: conservamos buena parte del mucílago y secamos el grano con calma. Una taza dulce y redonda, de cuerpo medio-alto y acidez media.",
     process: "Honey Red",
     origin: "Finca La Libertad, Cachipay",
     altitude: "Altura por confirmar",
-    notes: ["Fruta roja", "Panela", "Cuerpo redondo"],
+    notes: ["Dulce y redondo", "Cuerpo medio-alto", "Acidez media"],
     badge: "Microlote",
     image: "/assets/cafe-honey-beans-closeup.jpg",
     variants: [
       referenceVariant("honey-red-250", "250 g", 250, "/assets/cafe-honey-red-250-front.jpg"),
       referenceVariant("honey-red-500", "500 g", 500, "/assets/cafe-honey-red-500-front.jpg"),
-    ],
-  },
-  {
-    id: "honey-black",
-    slug: "honey-black",
-    category: "honey",
-    name: "Honey Black",
-    subtitle: "La expresión más intensa",
-    description:
-      "El grano se seca con todo su mucílago, lentamente y protegido del sol directo. Es el honey de mayor dulzor y cuerpo: fruta confitada, melaza y un final largo.",
-    process: "Honey Black",
-    origin: "Finca La Libertad, Cachipay",
-    altitude: "Altura por confirmar",
-    notes: ["Fruta confitada", "Melaza", "Final largo"],
-    badge: "Edición limitada",
-    image: "/assets/roasting.jpg",
-    variants: [
-      referenceVariant("honey-black-250", "250 g", 250, "/assets/cafe-honey-black-250-front.jpg"),
-      referenceVariant("honey-black-500", "500 g", 500, "/assets/cafe-honey-black-500-front.jpg"),
     ],
   },
 ];
@@ -175,7 +100,35 @@ function publicClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: freshFetch } });
+  // En el sitio estático la lectura ocurre una vez, durante el build; un
+  // fetch "no-store" convertiría la página en dinámica y la exportación fallaría.
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: isStaticSite ? fetch : freshFetch },
+  });
+}
+
+/** Rutas de imagen listas para publicar (con el basePath del sitio estático). */
+function withAssetPaths(products: Product[]): Product[] {
+  return products.map((product) => ({
+    ...product,
+    image: asset(product.image),
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      image: asset(variant.image),
+      beanImage: variant.beanImage ? asset(variant.beanImage) : null,
+    })),
+  }));
+}
+
+/**
+ * En el sitio estático un catálogo que no se pudo leer detiene el build: es
+ * mejor dejar publicada la versión anterior que publicar una tienda vacía.
+ */
+function catalogUnavailable(message: string, cause?: unknown): Product[] {
+  if (isStaticSite) throw new Error(`[catalog] ${message}`, { cause });
+  console.error(`[catalog] ${message}`, cause ?? "");
+  return [];
 }
 
 type CatalogRow = {
@@ -209,54 +162,58 @@ export function isPreviewCatalog() {
 
 export async function getCatalog(): Promise<Product[]> {
   const supabase = publicClient();
-  if (!supabase) return previewCatalog;
+  if (!supabase) {
+    if (isStaticSite) console.warn("[catalog] Sin Supabase configurado: se publica el catálogo de referencia.");
+    return withAssetPaths(previewCatalog);
+  }
 
+  let data: unknown;
   try {
-    const { data, error } = await supabase.rpc("storefront_catalog_items");
-    if (error || !Array.isArray(data)) {
-      console.error("[catalog] No fue posible leer el catálogo", error?.message);
-      return [];
-    }
-    const products = new Map<string, Product>();
-    for (const row of data as CatalogRow[]) {
-      let product = products.get(row.product_id);
-      if (!product) {
-        product = {
-          id: row.product_id,
-          slug: row.slug,
-          category: row.category,
-          name: row.name,
-          subtitle: row.subtitle,
-          description: row.description,
-          process: row.process,
-          origin: row.origin,
-          altitude: row.altitude,
-          notes: row.notes ?? [],
-          badge: row.badge,
-          image: row.image_url,
-          variants: [],
-        };
-        products.set(product.id, product);
-      }
-      product.variants.push({
-        id: row.variant_id,
-        label: row.variant_label,
-        weightGrams: row.weight_grams,
-        priceCop: Number(row.price_cop ?? 0),
-        priceConfirmed: row.price_confirmed,
-        available: Number(row.available_stock ?? 0) > 0,
-        lowStock: Boolean(row.low_stock),
-        grinds: row.grinds?.length ? row.grinds : ["En grano"],
-        image: row.variant_image_url ?? row.image_url,
-        beanImage: row.bean_image_url,
-      });
-    }
-    return [...products.values()];
+    const result = await supabase.rpc("storefront_catalog_items");
+    if (result.error) return catalogUnavailable(`No fue posible leer el catálogo: ${result.error.message}`);
+    data = result.data;
   } catch (cause) {
     // Una falla del catálogo en vivo no debe mostrar precios de referencia como vigentes.
-    console.error("[catalog] Error inesperado", cause);
-    return [];
+    return catalogUnavailable("Error inesperado al leer el catálogo", cause);
   }
+  if (!Array.isArray(data)) return catalogUnavailable("La respuesta del catálogo no es una lista");
+
+  const products = new Map<string, Product>();
+  for (const row of data as CatalogRow[]) {
+    let product = products.get(row.product_id);
+    if (!product) {
+      product = {
+        id: row.product_id,
+        slug: row.slug,
+        category: row.category,
+        name: row.name,
+        subtitle: row.subtitle,
+        description: row.description,
+        process: row.process,
+        origin: row.origin,
+        altitude: row.altitude,
+        notes: row.notes ?? [],
+        badge: row.badge,
+        image: row.image_url,
+        variants: [],
+      };
+      products.set(product.id, product);
+    }
+    product.variants.push({
+      id: row.variant_id,
+      label: row.variant_label,
+      weightGrams: row.weight_grams,
+      priceCop: Number(row.price_cop ?? 0),
+      priceConfirmed: row.price_confirmed,
+      available: Number(row.available_stock ?? 0) > 0,
+      lowStock: Boolean(row.low_stock),
+      grinds: row.grinds?.length ? row.grinds : ["En grano"],
+      image: row.variant_image_url ?? row.image_url,
+      beanImage: row.bean_image_url,
+    });
+  }
+  if (isStaticSite && products.size === 0) return catalogUnavailable("El catálogo publicado está vacío");
+  return withAssetPaths([...products.values()]);
 }
 
 export async function getShippingZones(): Promise<ShippingZone[]> {

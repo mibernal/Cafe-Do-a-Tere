@@ -33,29 +33,39 @@ select set_config('request.jwt.claims', '{"role":"service_role"}', false);
 
 select public.admin_configure_variant('lena-500', '500 g', 500, 42000, true,
   array['Espresso · fina','Prensa francesa · gruesa','En grano'], true, null) as cfg_lena500;
-select public.admin_configure_variant('lavado-250', '250 g', 250, 26000, true,
-  array['V60 / filtro manual · media','En grano'], true, null) as cfg_lavado250;
+select public.admin_configure_variant('honey-red-250', '250 g', 250, 26000, true,
+  array['V60 / filtro manual · media','En grano'], true, null) as cfg_honeyred250;
 do $$ begin
   begin perform public.admin_configure_variant('lena-500', '500 g', 500, 0, true, array['En grano'], true, null); raise exception 'FAIL zero confirmed price'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: zero confirmed price rejected'; end;
   begin perform public.admin_configure_variant('lena-500', '500 g', 500, 1000, true, array['Molido raro'], true, null); raise exception 'FAIL bad grind'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: invalid grind rejected'; end;
 end $$;
 select public.admin_adjust_inventory('lena-500', 10, 'Ingreso inicial', null) as stock_lena;
-select public.admin_adjust_inventory('lavado-250', 4, 'Ingreso inicial', null) as stock_lavado;
+select public.admin_adjust_inventory('honey-red-250', 4, 'Ingreso inicial', null) as stock_honeyred;
+-- 005: solo los tres cafés vigentes quedan publicados, y un café oculto no se
+-- puede comprar aunque tenga precio confirmado.
+select string_agg(id, ',' order by sort_order) as published_products from public.products where is_published;
+select public.admin_configure_variant('lavado-250', '250 g', 250, 26000, true, array['En grano'], true, null) as cfg_hidden_lavado;
+select public.admin_adjust_inventory('lavado-250', 2, 'Lote de prueba', null) as stock_hidden_lavado;
 select public.admin_configure_shipping_rate('bogota', 'Bogotá', 12000, true, true, '1 a 2 días hábiles', null) as rate_bog;
 select public.admin_configure_shipping_rate('cachipay', 'Cachipay', 0, true, false, 'Mismo día', null) as rate_cachipay;
 select * from public.storefront_shipping_zones();
-select variant_id, price_cop, price_confirmed, available_stock, low_stock from public.storefront_catalog_items() where variant_id in ('lena-500','lavado-250');
+select variant_id, price_cop, price_confirmed, available_stock, low_stock from public.storefront_catalog_items() where variant_id in ('lena-500','honey-red-250');
 
 -- ---------------------------------------------------------------- Wompi order happy path
+do $$ begin
+  begin perform public.create_checkout_order('CDT-HIDDEN-0001', 'bogota', '{"name":"Ana","email":"a@b.co","phone":"3001234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"lavado-250","grind":"En grano","quantity":1}]'::jsonb, repeat('9',64), 'WOMPI', 1); raise exception 'FAIL hidden product sold'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: %', sqlerrm; end;
+end $$;
+select count(*) filter (where product_id = 'lavado') as hidden_rows_in_storefront from public.storefront_catalog_items();
+
 select public.create_checkout_order('CDT-WOMPI-0001', 'bogota',
   '{"name":"Ana Pérez","email":"Ana@Example.com","phone":"3001234567","address":"Calle 1 # 2-3","notes":"Apto 101","privacyConsent":true,"privacyPolicyVersion":"2026-10-v1","documentType":"CC","documentNumber":"10203040"}'::jsonb,
-  '[{"variantId":"lena-500","grind":"En grano","quantity":2},{"variantId":"lavado-250","grind":"V60 / filtro manual · media","quantity":1}]'::jsonb,
+  '[{"variantId":"lena-500","grind":"En grano","quantity":2},{"variantId":"honey-red-250","grind":"V60 / filtro manual · media","quantity":1}]'::jsonb,
   repeat('a', 64), 'WOMPI', 300000) as wompi_order;
-select id, stock_on_hand, stock_reserved from public.product_variants where id in ('lena-500','lavado-250') order by id;
+select id, stock_on_hand, stock_reserved from public.product_variants where id in ('lena-500','honey-red-250') order by id;
 select public.settle_wompi_transaction(encode(sha256('evt1'),'hex'), 'CDT-WOMPI-0001', 'tx-1', 'APPROVED', (42000*2+26000+12000)::bigint*100, 'COP') as settled;
 select public.settle_wompi_transaction(encode(sha256('evt1'),'hex'), 'CDT-WOMPI-0001', 'tx-1', 'APPROVED', (42000*2+26000+12000)::bigint*100, 'COP') as settled_duplicate;
 select reference, status, paid_at is not null as paid, customer_email, city, subtotal_cop, shipping_cop, total_cop from public.orders where reference = 'CDT-WOMPI-0001';
-select id, stock_on_hand, stock_reserved from public.product_variants where id in ('lena-500','lavado-250') order by id;
+select id, stock_on_hand, stock_reserved from public.product_variants where id in ('lena-500','honey-red-250') order by id;
 -- second approved payment for the same reference raises a review flag
 select public.settle_wompi_transaction(encode(sha256('evt2'),'hex'), 'CDT-WOMPI-0001', 'tx-2', 'APPROVED', (42000*2+26000+12000)::bigint*100, 'COP') as dup_payment;
 select status, payment_review_reason is not null as flagged from public.orders where reference = 'CDT-WOMPI-0001';
@@ -70,13 +80,13 @@ do $$ begin
   begin perform public.create_checkout_order('CDT-BAD-00003', 'medellin', '{"name":"Ana","email":"a@b.co","phone":"3001234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"lena-500","grind":"En grano","quantity":1}]'::jsonb, repeat('b',64), 'WOMPI', 1); raise exception 'FAIL city'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: %', sqlerrm; end;
   begin perform public.create_checkout_order('CDT-BAD-00004', 'bogota', '{"name":"Ana","email":"a@b.co","phone":"3001234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"precision-500","grind":"Espresso · fina","quantity":1}]'::jsonb, repeat('b',64), 'WOMPI', 1); raise exception 'FAIL unconfirmed'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: %', sqlerrm; end;
   begin perform public.create_checkout_order('CDT-BAD-00005', 'bogota', '{"name":"Ana","email":"a@b.co","phone":"3001234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"lena-500","grind":"Chemex · media-gruesa","quantity":1}]'::jsonb, repeat('b',64), 'WOMPI', 1); raise exception 'FAIL grind'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: %', sqlerrm; end;
-  begin perform public.create_checkout_order('CDT-BAD-00006', 'bogota', '{"name":"Ana","email":"a@b.co","phone":"3001234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"lavado-250","grind":"En grano","quantity":9}]'::jsonb, repeat('b',64), 'WOMPI', 1); raise exception 'FAIL stock'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: %', sqlerrm; end;
+  begin perform public.create_checkout_order('CDT-BAD-00006', 'bogota', '{"name":"Ana","email":"a@b.co","phone":"3001234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"honey-red-250","grind":"En grano","quantity":9}]'::jsonb, repeat('b',64), 'WOMPI', 1); raise exception 'FAIL stock'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: %', sqlerrm; end;
   begin perform public.create_checkout_order('CDT-BAD-00007', 'cachipay', '{"name":"Ana","email":"a@b.co","phone":"3001234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"lena-500","grind":"En grano","quantity":1}]'::jsonb, repeat('b',64), 'CASH_ON_DELIVERY', 999999); raise exception 'FAIL cod city'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: %', sqlerrm; end;
   begin perform public.create_checkout_order('CDT-BAD-00008', 'bogota', '{"name":"Ana","email":"a@b.co","phone":"3001234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"lena-500","grind":"En grano","quantity":3}]'::jsonb, repeat('b',64), 'CASH_ON_DELIVERY', 100000); raise exception 'FAIL cod max'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: %', sqlerrm; end;
   begin perform public.create_checkout_order('CDT-BAD-00009', 'bogota', '{"name":"Ana","email":"a@b.co","phone":"6011234567","address":"Calle 1 # 2","privacyConsent":true,"privacyPolicyVersion":"v1"}'::jsonb, '[{"variantId":"lena-500","grind":"En grano","quantity":1}]'::jsonb, repeat('b',64), 'WOMPI', 1); raise exception 'FAIL phone'; exception when raise_exception then if sqlerrm like 'FAIL%' then raise; end if; raise notice 'ok: landline rejected'; end;
 end $$;
 select count(*) as orders_after_failures from public.orders;
-select id, stock_on_hand, stock_reserved from public.product_variants where id in ('lena-500','lavado-250') order by id;
+select id, stock_on_hand, stock_reserved from public.product_variants where id in ('lena-500','honey-red-250') order by id;
 
 -- ---------------------------------------------------------------- COD flow
 select public.create_checkout_order('CDT-COD-00001', 'bogota',
@@ -98,15 +108,15 @@ select status, paid_at is not null as cash_collected, courier_name from public.o
 -- ---------------------------------------------------------------- customer cancel by token, expiry, late approval
 select public.create_checkout_order('CDT-WOMPI-0002', 'bogota',
   '{"name":"Marta Ruiz","email":"marta@example.com","phone":"3201112233","address":"Av 68 # 10-20","privacyConsent":true,"privacyPolicyVersion":"2026-10-v1"}'::jsonb,
-  '[{"variantId":"lavado-250","grind":"En grano","quantity":3}]'::jsonb, repeat('d', 64), 'WOMPI', 300000) is not null as created;
-select stock_on_hand, stock_reserved from public.product_variants where id = 'lavado-250';
+  '[{"variantId":"honey-red-250","grind":"En grano","quantity":3}]'::jsonb, repeat('d', 64), 'WOMPI', 300000) is not null as created;
+select stock_on_hand, stock_reserved from public.product_variants where id = 'honey-red-250';
 select public.cancel_checkout_by_token(repeat('d', 64)) as customer_cancelled;
 select public.cancel_checkout_by_token(repeat('d', 64)) as second_cancel_false;
-select stock_on_hand, stock_reserved from public.product_variants where id = 'lavado-250';
+select stock_on_hand, stock_reserved from public.product_variants where id = 'honey-red-250';
 
 select public.create_checkout_order('CDT-WOMPI-0003', 'bogota',
   '{"name":"Marta Ruiz","email":"marta@example.com","phone":"3201112233","address":"Av 68 # 10-20","privacyConsent":true,"privacyPolicyVersion":"2026-10-v1"}'::jsonb,
-  '[{"variantId":"lavado-250","grind":"En grano","quantity":2}]'::jsonb, repeat('e', 64), 'WOMPI', 300000) is not null as created;
+  '[{"variantId":"honey-red-250","grind":"En grano","quantity":2}]'::jsonb, repeat('e', 64), 'WOMPI', 300000) is not null as created;
 reset role;
 update public.orders set expires_at = now() - interval '1 minute' where reference = 'CDT-WOMPI-0003';
 set role service_role;
@@ -114,22 +124,22 @@ select public.expire_checkout_orders() as expired;
 select status, cancelled_reason from public.orders where reference = 'CDT-WOMPI-0003';
 select public.settle_wompi_transaction(encode(sha256('evt-late'),'hex'), 'CDT-WOMPI-0003', 'tx-late', 'APPROVED', (26000*2+12000)::bigint*100, 'COP') as late_approval;
 select status, paid_at is not null as paid from public.orders where reference = 'CDT-WOMPI-0003';
-select stock_on_hand, stock_reserved from public.product_variants where id = 'lavado-250';
+select stock_on_hand, stock_reserved from public.product_variants where id = 'honey-red-250';
 
 -- refund with restock
 select public.admin_close_order((select id from public.orders where reference='CDT-WOMPI-0003'), 'REFUND', true, 'Cliente desistió (retracto)', null) as refunded;
 select status from public.orders where reference = 'CDT-WOMPI-0003';
-select stock_on_hand, stock_reserved from public.product_variants where id = 'lavado-250';
+select stock_on_hand, stock_reserved from public.product_variants where id = 'honey-red-250';
 -- cancel paid order not allowed
 select public.admin_close_order((select id from public.orders where reference='CDT-WOMPI-0001'), 'CANCEL', true, 'prueba', null) as cancel_paid_false;
 
 -- declined path
 select public.create_checkout_order('CDT-WOMPI-0004', 'bogota',
   '{"name":"Marta Ruiz","email":"marta@example.com","phone":"3201112233","address":"Av 68 # 10-20","privacyConsent":true,"privacyPolicyVersion":"2026-10-v1"}'::jsonb,
-  '[{"variantId":"lavado-250","grind":"En grano","quantity":1}]'::jsonb, repeat('f', 64), 'WOMPI', 300000) is not null as created;
+  '[{"variantId":"honey-red-250","grind":"En grano","quantity":1}]'::jsonb, repeat('f', 64), 'WOMPI', 300000) is not null as created;
 select public.settle_wompi_transaction(encode(sha256('evt-dec'),'hex'), 'CDT-WOMPI-0004', 'tx-dec', 'DECLINED', (26000+12000)::bigint*100, 'COP') as declined;
 select status, cancelled_reason from public.orders where reference = 'CDT-WOMPI-0004';
-select stock_on_hand, stock_reserved from public.product_variants where id = 'lavado-250';
+select stock_on_hand, stock_reserved from public.product_variants where id = 'honey-red-250';
 
 -- ---------------------------------------------------------------- catalog admin
 select public.admin_configure_product('honey-black', 'Honey Black', 'La expresión más intensa', 'Desc', array['Fruta confitada','Melaza'], 'Edición limitada', false, 7, null) as product_cfg;

@@ -4,16 +4,9 @@ import Image from "next/image";
 import { useState } from "react";
 import { Menu, ShoppingBag, X } from "lucide-react";
 import { useStore } from "@/components/store/store-provider";
+import { logoSrc } from "@/lib/site";
 
-const links = [
-  { href: "#cafes", label: "Cafés" },
-  { href: "#procesos", label: "Procesos" },
-  { href: "#elegir", label: "Ayúdame a elegir" },
-  { href: "#finca", label: "La finca" },
-  { href: "#ayuda", label: "Preguntas" },
-];
-
-export function SiteHeader({ announcement }: { announcement: string }) {
+export function SiteHeader({ announcement, links }: { announcement: string; links: { href: string; label: string }[] }) {
   const { totalItems, openCart } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -24,7 +17,7 @@ export function SiteHeader({ announcement }: { announcement: string }) {
       </div>
       <header className="site-header">
         <a className="brand" href="#inicio" aria-label="Café Doña Tere, inicio">
-          <Image src="/assets/logo-cafe-dona-tere.png" alt="" width={52} height={52} preload />
+          <Image src={logoSrc} alt="" width={52} height={52} preload />
           <span>
             <strong>Café Doña Tere</strong>
             <small>Finca La Libertad, Cachipay</small>

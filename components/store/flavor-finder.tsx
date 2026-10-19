@@ -1,96 +1,191 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { Check, RotateCcw } from "lucide-react";
+import type { Product } from "@/lib/store-types";
 import { GRIND_OPTIONS } from "@/lib/grind-options";
-import { productBand, bandVars } from "@/lib/catalog-style";
+import { bandVars } from "@/lib/catalog-style";
+import { coffeeProfile, drinkOptions, rankCoffees, tasteOptions, type Answers } from "@/lib/coffee-profiles";
 import { ProductPurchase, resolveSelection, type Selection } from "@/components/store/product-purchase";
-import { useStore } from "@/components/store/store-provider";
+import { isPurchasable, useStore } from "@/components/store/store-provider";
+import { logoSrc } from "@/lib/site";
 
-const tastes = [
-  { id: "cacao", label: "Chocolate y cacao, intenso", productIds: ["lena", "honey-black"], why: "Su tostión a la leña da cacao oscuro, frutos secos y un final ahumado que se siente en cada sorbo." },
-  { id: "citrico", label: "Cítrico y dulce, luminoso", productIds: ["precision", "lavado"], why: "Una tostión media que conserva la naranja, la mandarina y la panela del grano." },
-  { id: "fruta", label: "Fruta madura y mucho dulzor", productIds: ["natural", "honey-black", "honey-red"], why: "Secar el grano con su fruta le da notas de fruta madura, caramelo y un cuerpo sedoso." },
-  { id: "limpio", label: "Limpio y equilibrado, para diario", productIds: ["lavado", "precision"], why: "El proceso lavado deja una taza clara y balanceada que acompaña cualquier momento." },
-  { id: "descubrir", label: "Algo especial para descubrir", productIds: ["honey-red", "honey", "honey-black"], why: "Un microlote honey: más dulzor y cuerpo, secado con calma en la finca." },
-] as const;
-
-const methods = GRIND_OPTIONS.map((option) => ({
+const methodOptions = GRIND_OPTIONS.map((option) => ({
   value: option.value,
   label: option.value === "En grano" ? "Lo muelo en casa" : option.method,
 }));
 
+/** Presentación y molienda iniciales: la que se puede comprar y trae la molienda pedida. */
+function defaultSelection(product: Product, method: string | undefined, ordersEnabled: boolean): Selection | undefined {
+  const sellable = (variant: Product["variants"][number]) => !ordersEnabled || isPurchasable(variant);
+  const withGrind = (variant: Product["variants"][number]) => Boolean(method && variant.grinds.includes(method));
+  const variant =
+    product.variants.find((item) => sellable(item) && withGrind(item)) ??
+    product.variants.find(withGrind) ??
+    product.variants.find(sellable) ??
+    product.variants[0];
+  if (!variant) return undefined;
+  // Sin método elegido, la molienda sugerida es donde ese café mejor se expresa.
+  const grind =
+    (method && variant.grinds.includes(method) ? method : undefined) ??
+    coffeeProfile(product).methods.find((item) => variant.grinds.includes(item)) ??
+    variant.grinds[0];
+  return { variantId: variant.id, grind };
+}
+
+function ChoiceGroup<T extends string>({
+  legend,
+  name,
+  options,
+  value,
+  onChange,
+  compact,
+}: {
+  legend: string;
+  name: string;
+  options: { id: T; label: string; hint?: string }[];
+  value: T | undefined;
+  onChange: (value: T) => void;
+  compact?: boolean;
+}) {
+  return (
+    <fieldset className="choice-group">
+      <legend>{legend}</legend>
+      <div className={compact ? "choice-row is-compact" : "choice-row"}>
+        {options.map((option) => (
+          <label key={option.id} className={value === option.id ? "choice is-selected" : "choice"}>
+            <input type="radio" name={name} value={option.id} checked={value === option.id} onChange={() => onChange(option.id)} />
+            <span>
+              <b>{option.label}</b>
+              {option.hint && <small>{option.hint}</small>}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 export function FlavorFinder() {
-  const { products } = useStore();
-  const [taste, setTaste] = useState<string>("");
-  const [method, setMethod] = useState<string>("");
-  const [selection, setSelection] = useState<Selection | undefined>();
+  const { products, options } = useStore();
+  const [answers, setAnswers] = useState<Answers>({});
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const [manual, setManual] = useState<{ key: string; selection: Selection } | null>(null);
 
-  const tasteOption = tastes.find((item) => item.id === taste);
-  const product = tasteOption
-    ? tasteOption.productIds.map((id) => products.find((item) => item.id === id)).find(Boolean) ?? null
-    : null;
+  const ranking = useMemo(
+    () =>
+      rankCoffees(products, answers, (product) => !options.ordersEnabled || product.variants.some(isPurchasable)),
+    [products, answers, options.ordersEnabled],
+  );
+  if (products.length < 2) return null;
 
-  // Cada respuesta nueva reinicia la sugerencia con la molienda elegida.
-  useEffect(() => {
-    if (!product || !method) return;
-    const variant = product.variants.find((item) => item.grinds.includes(method)) ?? product.variants[0];
-    if (variant) setSelection({ variantId: variant.id, grind: variant.grinds.includes(method) ? method : variant.grinds[0] });
-  }, [product, method]);
+  const top = ranking[0] ?? null;
+  const shown = ranking.find((item) => item.product.id === pickedId) ?? top;
+  const alternative = shown ? ranking.find((item) => item.product.id !== shown.product.id && item.score > 0) : undefined;
 
+  const product = shown?.product ?? null;
+  const key = `${product?.id ?? ""}|${answers.method ?? ""}`;
+  const selection = product
+    ? manual?.key === key
+      ? manual.selection
+      : defaultSelection(product, answers.method, options.ordersEnabled)
+    : undefined;
   const resolved = product ? resolveSelection(product, selection) : null;
-  const grindMissing = Boolean(product && method && resolved && resolved.grind !== method);
+  const grindMissing = Boolean(answers.method && resolved && resolved.grind !== answers.method && manual?.key !== key);
+
+  function answer(patch: Answers) {
+    setAnswers((current) => ({ ...current, ...patch }));
+    setPickedId(null);
+  }
 
   return (
     <section className="finder-section" id="elegir" aria-labelledby="finder-title">
       <div className="section-shell finder-layout">
         <div className="finder-questions">
           <h2 id="finder-title">¿No sabes cuál elegir?</h2>
-          <p className="finder-lead">Dos respuestas y te sugerimos un café, ya con la molienda para tu método.</p>
-          <fieldset className="choice-group">
-            <legend>¿Qué sabores disfrutas más?</legend>
-            <div>
-              {tastes.map((item) => (
-                <label key={item.id} className={taste === item.id ? "choice is-selected" : "choice"}>
-                  <input type="radio" name="finder-taste" value={item.id} checked={taste === item.id} onChange={() => setTaste(item.id)} />
-                  <span>{item.label}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset className="choice-group">
-            <legend>¿Cómo lo preparas?</legend>
-            <div>
-              {methods.map((item) => (
-                <label key={item.value} className={method === item.value ? "choice is-selected" : "choice"}>
-                  <input type="radio" name="finder-method" value={item.value} checked={method === item.value} onChange={() => setMethod(item.value)} />
-                  <span>{item.label}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <p className="finder-lead">
+            Con tu primera respuesta te sugerimos un café. Las otras dos afinan la sugerencia y la molienda.
+          </p>
+          <ChoiceGroup
+            legend="1. ¿Qué sabores disfrutas?"
+            name="finder-taste"
+            options={tasteOptions}
+            value={answers.taste}
+            onChange={(taste) => answer({ taste })}
+          />
+          <ChoiceGroup
+            legend="2. ¿Cómo lo tomas?"
+            name="finder-drink"
+            options={drinkOptions}
+            value={answers.drink}
+            onChange={(drink) => answer({ drink })}
+          />
+          <ChoiceGroup
+            legend="3. ¿Cómo lo preparas?"
+            name="finder-method"
+            options={methodOptions.map((item) => ({ id: item.value, label: item.label }))}
+            value={answers.method}
+            onChange={(method) => answer({ method })}
+            compact
+          />
+          {(answers.taste || answers.drink || answers.method) && (
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => {
+                setAnswers({});
+                setPickedId(null);
+                setManual(null);
+              }}
+            >
+              <RotateCcw size={15} aria-hidden />
+              Empezar de nuevo
+            </button>
+          )}
         </div>
 
         <div className="finder-result" aria-live="polite">
-          {product && method && resolved?.variant ? (
+          {product && shown && resolved?.variant ? (
             <article className="suggestion" style={bandVars(product)}>
               <div className="suggestion-visual">
-                <Image src={resolved.image} alt={`Etiqueta de ${product.name}`} fill sizes="(max-width: 800px) 40vw, 200px" />
+                <Image src={resolved.image} alt={`Etiqueta de ${product.name}`} fill sizes="(max-width: 800px) 60vw, 220px" />
               </div>
               <div className="suggestion-body">
-                <p className="suggestion-kicker">Te sugerimos</p>
+                <p className="suggestion-kicker">{shown === top ? "Te sugerimos" : "También te puede gustar"}</p>
                 <h3>{product.name}</h3>
-                <p>{tasteOption?.why}</p>
+                <ul className="reason-list">
+                  {shown.reasons.map((reason) => (
+                    <li key={reason}>
+                      <Check size={15} aria-hidden />
+                      {reason}
+                    </li>
+                  ))}
+                </ul>
                 {grindMissing && (
-                  <p className="suggestion-note">Esta presentación no viene en esa molienda; te dejamos la más cercana disponible.</p>
+                  <p className="suggestion-note">
+                    Esta presentación no viene en esa molienda; te dejamos la más cercana disponible.
+                  </p>
                 )}
-                <ProductPurchase product={product} selection={selection} onSelect={setSelection} />
+                <ProductPurchase
+                  product={product}
+                  selection={selection}
+                  onSelect={(next) => setManual({ key, selection: next })}
+                />
+                {alternative && (
+                  <p className="suggestion-alt">
+                    {shown === top ? "¿Prefieres otra opción? " : "Nuestra primera sugerencia es "}
+                    <button type="button" onClick={() => setPickedId(alternative.product.id)}>
+                      {shown === top ? `Ver ${alternative.product.name}` : alternative.product.name}
+                    </button>
+                  </p>
+                )}
               </div>
             </article>
           ) : (
             <div className="suggestion-placeholder">
-              <Image src="/assets/logo-cafe-dona-tere.png" alt="" width={120} height={120} />
-              <p>Elige un sabor y tu método de preparación para ver la sugerencia de Doña Tere.</p>
+              <Image src={logoSrc} alt="" width={112} height={112} />
+              <p>Cuéntanos qué sabores disfrutas y Doña Tere te sugiere uno de sus cafés.</p>
             </div>
           )}
         </div>
