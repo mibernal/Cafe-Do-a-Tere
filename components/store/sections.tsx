@@ -69,7 +69,7 @@ export function Hero({ options, products, showFinder }: { options: CheckoutOptio
       </div>
       <div className="hero-art" aria-hidden>
         <div className="hero-roast">
-          <Image src={asset("/assets/roasting.jpg")} alt="" fill preload sizes="(max-width: 860px) 70vw, 34vw" />
+          <Image src={asset("/assets/roasting.jpg")} alt="" fill preload fetchPriority="high" sizes="(max-width: 860px) 70vw, 34vw" />
         </div>
         <div className="hero-bag hero-bag-1">
           <Image src={left} alt="" fill sizes="(max-width: 860px) 32vw, 15vw" />

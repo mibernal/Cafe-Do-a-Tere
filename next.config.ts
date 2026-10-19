@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import imageWidths from "./lib/image-widths.json";
 
 // Dos destinos de build (ver lib/site-target.ts):
 // - servidor (por defecto): la app completa.
@@ -22,8 +23,9 @@ const staticConfig: NextConfig = {
   basePath,
   // GitHub Pages sirve /terminos/ como /terminos/index.html.
   trailingSlash: true,
-  // Sin servidor no hay optimizador de imágenes: se sirven tal cual.
-  images: { unoptimized: true },
+  // Sin servidor no hay optimizador de imágenes: el build genera versiones
+  // WebP por ancho y este loader las enlaza (ver lib/image-loader.ts).
+  images: { loader: "custom", loaderFile: "./lib/image-loader.ts", ...imageWidths },
   pageExtensions: ["tsx", "ts"],
   env: { NEXT_PUBLIC_BASE_PATH: basePath },
 };

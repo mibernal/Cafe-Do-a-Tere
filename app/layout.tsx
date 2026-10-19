@@ -4,11 +4,12 @@ import "./globals.css";
 import { getStoreReadiness } from "@/lib/store-config";
 
 // Fuentes alojadas en el proyecto: el build no depende de Google Fonts y el
-// navegador del cliente no contacta a terceros para cargarlas.
+// navegador del cliente no contacta a terceros para cargarlas. Solo se
+// incluyen las normales: la tienda casi no usa cursiva y precargar las
+// cursivas competía con la imagen principal.
 const sans = localFont({
   src: [
     { path: "./fonts/dm-sans-latin-wght-normal.woff2", style: "normal", weight: "100 1000" },
-    { path: "./fonts/dm-sans-latin-wght-italic.woff2", style: "italic", weight: "100 1000" },
   ],
   variable: "--font-sans",
   display: "swap",
@@ -16,7 +17,6 @@ const sans = localFont({
 const serif = localFont({
   src: [
     { path: "./fonts/playfair-display-latin-wght-normal.woff2", style: "normal", weight: "400 900" },
-    { path: "./fonts/playfair-display-latin-wght-italic.woff2", style: "italic", weight: "400 900" },
   ],
   variable: "--font-serif",
   display: "swap",

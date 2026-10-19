@@ -7,6 +7,7 @@
 
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
+import { createGzip } from "node:zlib";
 import { extname, join, normalize, resolve, sep } from "node:path";
 
 const dir = resolve(process.argv[2] ?? "out");
@@ -44,12 +45,18 @@ function fileFor(pathname) {
   return null;
 }
 
-function send(response, status, file) {
+// Como GitHub Pages, comprime con gzip los archivos de texto.
+const compressible = new Set([".html", ".js", ".css", ".json", ".txt", ".xml", ".svg"]);
+
+function send(request, response, status, file) {
+  const gzip = compressible.has(extname(file)) && /\bgzip\b/.test(request.headers["accept-encoding"] ?? "");
   response.writeHead(status, {
     "Content-Type": types[extname(file)] ?? "application/octet-stream",
     "X-Content-Type-Options": "nosniff",
+    ...(gzip ? { "Content-Encoding": "gzip", Vary: "Accept-Encoding" } : {}),
   });
-  createReadStream(file).pipe(response);
+  const stream = createReadStream(file);
+  (gzip ? stream.pipe(createGzip()) : stream).pipe(response);
 }
 
 createServer((request, response) => {
@@ -69,9 +76,9 @@ createServer((request, response) => {
     return;
   }
   const file = fileFor(relative);
-  if (file) return send(response, 200, file);
+  if (file) return send(request, response, 200, file);
   const notFound = join(dir, "404.html");
-  if (existsSync(notFound)) return send(response, 404, notFound);
+  if (existsSync(notFound)) return send(request, response, 404, notFound);
   response.writeHead(404).end();
 }).listen(port, "127.0.0.1", () => {
   console.log(`Sitio estático en http://127.0.0.1:${port}${basePath}/ (carpeta ${dir})`);
