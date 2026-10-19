@@ -96,6 +96,32 @@ test("solo se muestran precios confirmados (los mismos de los datos estructurado
   }
 });
 
+test("cada presentación muestra su bolsa con el peso y la molienda correctos", async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto("./");
+  for (const card of await page.locator(".product-card").all()) {
+    await card.scrollIntoViewIfNeeded();
+    const sizes = card.locator(".size-option input");
+    const count = Math.max(await sizes.count(), 1);
+    for (let i = 0; i < count; i++) {
+      if (await sizes.count()) await sizes.nth(i).check({ force: true });
+      const label = (await sizes.count())
+        ? ((await card.locator(".size-option").nth(i).textContent()) ?? "").trim()
+        : ((await card.locator(".size-single b").textContent()) ?? "").trim();
+      const weight = label.match(/\d+/)![0];
+      const pack = card.locator(".visual-pack.is-shot img");
+      await chooseGrind(card);
+      await expect(pack).toHaveAttribute("alt", new RegExp(`, ${label}$`));
+      expect(await pack.getAttribute("src")).toMatch(new RegExp(`pack-[a-z-]+-${weight}(-ground)?[-.\\d]`));
+      if (await card.locator('.grind-picker option[value="En grano"]').count()) {
+        await chooseGrind(card, "En grano");
+        expect(await pack.getAttribute("src")).toMatch(new RegExp(`pack-[a-z-]+-${weight}-beans`));
+      }
+    }
+  }
+  expect(errors).toEqual([]);
+});
+
 test("la molienda se elige de forma explícita y se conserva hasta WhatsApp", async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto("./");

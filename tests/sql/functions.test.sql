@@ -183,3 +183,13 @@ set role service_role;
 select public.consume_scoped_limit(repeat('9',64), 2, 3600) a, public.consume_scoped_limit(repeat('9',64), 2, 3600) b, public.consume_scoped_limit(repeat('9',64), 2, 3600) c_false;
 select public.prune_store_rate_limits() >= 0 as pruned;
 reset role;
+-- ---------------------------------------------------------------- packaged images (008)
+do $$ begin
+  if (select image_url from public.product_variants where id = 'lena-500') = '/assets/pack-lena-500-ground.png'
+     and (select bean_image_url from public.product_variants where id = 'lena-500') = '/assets/pack-lena-500-beans.png'
+     and (select bean_image_url from public.product_variants where id = 'honey-red-250') = '/assets/pack-honey-red-250-beans.png'
+     and (select bean_image_url from public.product_variants where id = 'precision-500') is null
+  then raise notice 'ok: variants show packaged images';
+  else raise exception 'FAIL packaged images';
+  end if;
+end $$;

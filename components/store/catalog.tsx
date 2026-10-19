@@ -11,23 +11,37 @@ import { coffeeProfile, countCoffees } from "@/lib/coffee-profiles";
 import { notesPhrase } from "@/lib/grind-options";
 import { ProductPurchase, resolveSelection, type Selection } from "@/components/store/product-purchase";
 import { useStore } from "@/components/store/store-provider";
+import { isIllustrativePack, isPackArt, isPackShot } from "@/lib/provisional-assets";
 
-function isLabelArt(src: string) {
-  return src.endsWith("-front.jpg");
-}
-
-function ProductVisual({ product, image, sizes }: { product: Product; image: string; sizes: string }) {
-  if (!isLabelArt(image)) {
+function ProductVisual({
+  product,
+  image,
+  sizes,
+  label,
+}: {
+  product: Product;
+  image: string;
+  sizes: string;
+  label?: string;
+}) {
+  if (!isPackArt(image)) {
     return (
       <Image src={image} alt={`Granos de ${product.name}`} fill sizes={sizes} className="visual-photo" />
     );
   }
+  const shot = isPackShot(image);
   return (
     <>
       <Image src={product.image} alt="" aria-hidden fill sizes={sizes} className="visual-backdrop" />
-      <span className="visual-pack">
-        <Image src={image} alt={`Etiqueta de ${product.name}`} fill sizes="(max-width: 700px) 46vw, 220px" />
+      <span className={shot ? "visual-pack is-shot" : "visual-pack"}>
+        <Image
+          src={image}
+          alt={shot ? `Bolsa de ${product.name}${label ? `, ${label}` : ""}` : `Etiqueta de ${product.name}`}
+          fill
+          sizes="(max-width: 700px) 56vw, 280px"
+        />
       </span>
+      {isIllustrativePack(image) && <span className="pack-note">Empaque ilustrativo</span>}
     </>
   );
 }
@@ -56,7 +70,12 @@ function ProductCard({
     >
       <button type="button" className="product-visual" onClick={onOpen}>
         <span className="sr-only">Ver detalles de {product.name}</span>
-        <ProductVisual product={product} image={image} sizes="(max-width: 700px) 92vw, (max-width: 1100px) 45vw, 360px" />
+        <ProductVisual
+          product={product}
+          image={image}
+          label={variant.label}
+          sizes="(max-width: 700px) 92vw, (max-width: 1100px) 45vw, 360px"
+        />
         {product.badge && <span className="product-badge">{product.badge}</span>}
         {variant.lowStock && variant.available && <span className="stock-chip">Quedan pocas</span>}
         {variant.priceConfirmed && !anyAvailable && <span className="stock-chip stock-out">Agotado</span>}
@@ -116,7 +135,12 @@ function ProductDialog({
             <X size={20} aria-hidden />
           </button>
           <div className="product-dialog-visual product-visual">
-            <ProductVisual product={product} image={resolved.image} sizes="(max-width: 800px) 92vw, 420px" />
+            <ProductVisual
+              product={product}
+              image={resolved.image}
+              label={resolved.variant.label}
+              sizes="(max-width: 800px) 92vw, 420px"
+            />
           </div>
           <div className="product-dialog-body">
             <span className="band-ribbon">{product.process}</span>

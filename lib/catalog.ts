@@ -6,7 +6,7 @@ import type { Product, ShippingZone } from "@/lib/store-types";
 import { freshFetch } from "@/lib/supabase/admin";
 import { GRIND_OPTIONS, GROUND_GRIND_VALUES } from "@/lib/grind-options";
 import { asset, isStaticSite } from "@/lib/site-target";
-import { isProvisionalLabel } from "@/lib/provisional-assets";
+import { packFor } from "@/lib/provisional-assets";
 import { site } from "@/lib/site";
 
 const ALL_GRINDS = GRIND_OPTIONS.map((option) => option.value);
@@ -55,9 +55,9 @@ export const previewCatalog: Product[] = [
     badge: "El favorito de casa",
     image: "/assets/beans.jpg",
     variants: [
-      referenceVariant("lena-250", "250 g", 250, "/assets/cafe-lena-250-front.jpg", { grinds: [...GROUND_GRIND_VALUES] }),
-      referenceVariant("lena-500", "500 g", 500, "/assets/cafe-lena-500-ground-front.jpg", {
-        beanImage: "/assets/cafe-lena-500-beans-front.jpg",
+      referenceVariant("lena-250", "250 g", 250, "/assets/pack-lena-250.png", { grinds: [...GROUND_GRIND_VALUES] }),
+      referenceVariant("lena-500", "500 g", 500, "/assets/pack-lena-500-ground.png", {
+        beanImage: "/assets/pack-lena-500-beans.png",
       }),
     ],
   },
@@ -76,7 +76,7 @@ export const previewCatalog: Product[] = [
     badge: "Perfil de taza",
     image: "/assets/roasting.jpg",
     variants: [
-      referenceVariant("precision-500", "500 g", 500, "/assets/cafe-precision-500-front.jpg", { grinds: [...GROUND_GRIND_VALUES] }),
+      referenceVariant("precision-500", "500 g", 500, "/assets/pack-precision-500.png", { grinds: [...GROUND_GRIND_VALUES] }),
     ],
   },
   {
@@ -94,8 +94,12 @@ export const previewCatalog: Product[] = [
     badge: "Microlote",
     image: "/assets/cafe-honey-beans-closeup.jpg",
     variants: [
-      referenceVariant("honey-red-250", "250 g", 250, "/assets/cafe-honey-red-250-front.jpg"),
-      referenceVariant("honey-red-500", "500 g", 500, "/assets/cafe-honey-red-500-front.jpg"),
+      referenceVariant("honey-red-250", "250 g", 250, "/assets/pack-honey-red-250.png", {
+        beanImage: "/assets/pack-honey-red-250-beans.png",
+      }),
+      referenceVariant("honey-red-500", "500 g", 500, "/assets/pack-honey-red-500.png", {
+        beanImage: "/assets/pack-honey-red-500-beans.png",
+      }),
     ],
   },
 ];
@@ -114,16 +118,18 @@ function publicClient() {
 
 /**
  * Rutas de imagen listas para publicar (con el basePath del sitio estático).
- * Una etiqueta ilustrativa se reemplaza por la foto del café para no
- * presentarla como el empaque real (ver lib/provisional-assets.ts).
+ * Una variante que todavía guarda la ruta de su etiqueta muestra la bolsa
+ * empacada con esa etiqueta (ver lib/provisional-assets.ts).
  */
 function withAssetPaths(products: Product[]): Product[] {
   return products.map((product) => ({
     ...product,
     image: asset(product.image),
     variants: product.variants.map((variant) => {
-      const label = isProvisionalLabel(variant.image) || isMissingAsset(variant.image) ? product.image : variant.image;
-      const beanImage = variant.beanImage && !isMissingAsset(variant.beanImage) ? variant.beanImage : null;
+      const pack = packFor(variant.image);
+      const label = isMissingAsset(pack) ? product.image : pack;
+      const beans = variant.beanImage ? packFor(variant.beanImage) : null;
+      const beanImage = beans && !isMissingAsset(beans) ? beans : null;
       return { ...variant, image: asset(label), beanImage: beanImage ? asset(beanImage) : null };
     }),
   }));

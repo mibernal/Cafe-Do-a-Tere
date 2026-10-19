@@ -10,6 +10,7 @@ import { drinkOptions, rankCoffees, tasteOptions, type Answers } from "@/lib/cof
 import { ProductPurchase, resolveSelection, type Selection } from "@/components/store/product-purchase";
 import { isPurchasable, useStore } from "@/components/store/store-provider";
 import { logoSrc } from "@/lib/site";
+import { isPackShot } from "@/lib/provisional-assets";
 
 const methodOptions = GRIND_OPTIONS.map((option) => ({
   value: option.value,
@@ -146,7 +147,12 @@ export function FlavorFinder() {
           {product && shown && resolved?.variant ? (
             <article className="suggestion" style={bandVars(product)}>
               <div className="suggestion-visual">
-                <Image src={resolved.image} alt={`Etiqueta de ${product.name}`} fill sizes="(max-width: 800px) 60vw, 220px" />
+                <Image
+                  src={resolved.image}
+                  alt={isPackShot(resolved.image) ? `Bolsa de ${product.name}, ${resolved.variant.label}` : `Etiqueta de ${product.name}`}
+                  fill
+                  sizes="(max-width: 800px) 60vw, 220px"
+                />
               </div>
               <div className="suggestion-body">
                 <p className="suggestion-kicker">{shown === top ? "Te sugerimos" : "También te puede gustar"}</p>
