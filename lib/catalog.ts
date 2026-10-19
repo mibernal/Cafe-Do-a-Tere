@@ -4,6 +4,8 @@ import type { Product, ShippingZone } from "@/lib/store-types";
 import { freshFetch } from "@/lib/supabase/admin";
 import { GRIND_OPTIONS, GROUND_GRIND_VALUES } from "@/lib/grind-options";
 import { asset, isStaticSite } from "@/lib/site-target";
+import { isProvisionalLabel } from "@/lib/provisional-assets";
+import { site } from "@/lib/site";
 
 const ALL_GRINDS = GRIND_OPTIONS.map((option) => option.value);
 
@@ -12,13 +14,14 @@ function referenceVariant(
   label: string,
   weightGrams: number,
   image: string,
-  options: { priceCop?: number; grinds?: string[]; beanImage?: string } = {},
+  options: { grinds?: string[]; beanImage?: string } = {},
 ) {
+  // Sin base de datos no hay precios: nunca se inventan cifras en el código.
   return {
     id,
     label,
     weightGrams,
-    priceCop: options.priceCop ?? 0,
+    priceCop: 0,
     priceConfirmed: false,
     available: false,
     lowStock: false,
@@ -45,14 +48,13 @@ export const previewCatalog: Product[] = [
       "Cacao oscuro, frutos secos y una nota cítrica suave que termina con el carácter inconfundible de la leña.",
     process: "Tostión a la leña",
     origin: "Finca La Libertad, Cachipay",
-    altitude: "1.450–1.650 m s. n. m.",
+    altitude: site.altitude,
     notes: ["Cacao", "Frutos secos", "Final ahumado"],
     badge: "El favorito de casa",
     image: "/assets/beans.jpg",
     variants: [
       referenceVariant("lena-250", "250 g", 250, "/assets/cafe-lena-250-front.jpg", { grinds: [...GROUND_GRIND_VALUES] }),
       referenceVariant("lena-500", "500 g", 500, "/assets/cafe-lena-500-ground-front.jpg", {
-        priceCop: 40000,
         beanImage: "/assets/cafe-lena-500-beans-front.jpg",
       }),
     ],
@@ -67,7 +69,7 @@ export const previewCatalog: Product[] = [
       "Un perfil amable de naranja y mandarina, acompañado por panela, almendra y chocolate con leche.",
     process: "Tostión media",
     origin: "Finca La Libertad, Cachipay",
-    altitude: "Altura por confirmar",
+    altitude: site.altitude,
     notes: ["Naranja", "Panela", "Almendra"],
     badge: "Perfil de taza",
     image: "/assets/roasting.jpg",
@@ -85,7 +87,7 @@ export const previewCatalog: Product[] = [
       "Un lote pequeño de la finca en proceso honey: conservamos buena parte del mucílago y secamos el grano con calma. Una taza dulce y redonda, de cuerpo medio-alto y acidez media.",
     process: "Honey Red",
     origin: "Finca La Libertad, Cachipay",
-    altitude: "Altura por confirmar",
+    altitude: site.altitude,
     notes: ["Dulce y redondo", "Cuerpo medio-alto", "Acidez media"],
     badge: "Microlote",
     image: "/assets/cafe-honey-beans-closeup.jpg",
@@ -108,14 +110,18 @@ function publicClient() {
   });
 }
 
-/** Rutas de imagen listas para publicar (con el basePath del sitio estático). */
+/**
+ * Rutas de imagen listas para publicar (con el basePath del sitio estático).
+ * Una etiqueta ilustrativa se reemplaza por la foto del café para no
+ * presentarla como el empaque real (ver lib/provisional-assets.ts).
+ */
 function withAssetPaths(products: Product[]): Product[] {
   return products.map((product) => ({
     ...product,
     image: asset(product.image),
     variants: product.variants.map((variant) => ({
       ...variant,
-      image: asset(variant.image),
+      image: asset(isProvisionalLabel(variant.image) ? product.image : variant.image),
       beanImage: variant.beanImage ? asset(variant.beanImage) : null,
     })),
   }));
@@ -156,6 +162,16 @@ type CatalogRow = {
   bean_image_url: string | null;
 };
 
+/**
+ * La altura de Finca La Libertad está confirmada (lib/site.ts). Un café de la
+ * finca que todavía dice "por confirmar" en la base (la migración 006 lo
+ * corrige) muestra la altura de la finca; cualquier otro valor se respeta.
+ */
+function farmAltitude(row: Pick<CatalogRow, "altitude" | "origin">) {
+  const pending = !row.altitude?.trim() || /por confirmar/i.test(row.altitude);
+  return pending && row.origin?.startsWith(site.farm) ? site.altitude : row.altitude;
+}
+
 export function isPreviewCatalog() {
   return publicClient() === null;
 }
@@ -191,7 +207,7 @@ export async function getCatalog(): Promise<Product[]> {
         description: row.description,
         process: row.process,
         origin: row.origin,
-        altitude: row.altitude,
+        altitude: farmAltitude(row),
         notes: row.notes ?? [],
         badge: row.badge,
         image: row.image_url,

@@ -9,6 +9,7 @@ Tienda de Finca La Libertad (Cachipay, Cundinamarca) en **Next.js 16 (App Router
 - Panel `/admin` para pedidos, inventario, catálogo (textos, precios, presentaciones nuevas) y ciudades de envío.
 - Sin configuración de pagos la tienda funciona en **modo WhatsApp**: el cliente arma la bolsa y la envía con un mensaje listo.
 - **Publicada en GitHub Pages** como sitio estático en modo WhatsApp: `https://mibernal.github.io/Cafe-Do-a-Tere/`. El catálogo se lee de Supabase en cada build. CI, publicación, migraciones de Supabase con aprobación, CodeQL y Dependabot corren en GitHub Actions: ver [`docs/despliegue.md`](docs/despliegue.md).
+- Datos del negocio que aún faltan (legales, precios, café, etiquetas): [`docs/datos-pendientes.md`](docs/datos-pendientes.md). Migración a un hosting con servidor para cobrar en línea: [`docs/migracion-hosting.md`](docs/migracion-hosting.md).
 
 ## Desarrollo local
 
@@ -42,6 +43,7 @@ Las fuentes (Playfair Display y DM Sans, licencia OFL) están en `app/fonts/`: e
    - `202610180003_brew_method_grinds.sql`
    - `202610190004_varieties_cod_operations.sql` (variedades nuevas, contra entrega, zonas de envío públicas, operación completa del panel)
    - `202610190005_catalogo_vigente.sql` (deja publicados solo los tres cafés vigentes y presenta el Honey Red como microlote; no toca cafés a los que ya les confirmaste precio o cargaste inventario)
+   - `202610190006_altura_finca.sql` (completa la altura confirmada de la finca, 1.450–1.650 m s. n. m., en los cafés que seguían «por confirmar»)
 
    La migración 004 cambia funciones que usa la app: despliega la base de datos y esta versión del código al mismo tiempo.
 3. En **Authentication → Providers → Email** desactiva el registro público (*Allow new users to sign up*). Crea la cuenta de Doña Tere y asígnale el rol desde el editor SQL (nunca en `user_metadata`, que el usuario puede editar):

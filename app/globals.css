@@ -967,7 +967,7 @@ legend {
 .size-option span {
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 7px 16px;
   border-radius: 999px;
   border: 1.5px solid var(--line);
@@ -1015,6 +1015,73 @@ legend {
   font-size: 13.5px;
   color: var(--muted);
   margin-top: -6px;
+}
+
+.grind-hint.is-error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.grind-picker select[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(163, 50, 42, 0.15);
+}
+
+/* Cómo se pide en modo WhatsApp: tres pasos cortos sobre el catálogo. */
+.buy-steps {
+  counter-reset: buy;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 28px;
+  padding: 0;
+  list-style: none;
+}
+
+.buy-steps li {
+  counter-increment: buy;
+  position: relative;
+  padding: 14px 16px 14px 52px;
+  border-radius: var(--radius-m);
+  background: var(--label);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.buy-steps li::before {
+  content: counter(buy);
+  position: absolute;
+  left: 14px;
+  top: 13px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--cream);
+  font: 700 14px/1 var(--sans);
+}
+
+.buy-steps b {
+  color: var(--ink);
+}
+
+@media (max-width: 860px) {
+  .buy-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dato legal que el comercio aún debe completar. */
+.legal-pending {
+  background: #fde7c8;
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: 600;
 }
 
 .add-button {
@@ -1780,7 +1847,7 @@ legend {
 
 .origin-facts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   margin-top: 34px;
   padding-top: 24px;
@@ -1797,6 +1864,10 @@ legend {
   font-family: var(--serif);
   font-size: 19px;
   line-height: 1.3;
+}
+
+.origin-facts .origin-fact-wide {
+  grid-column: 1 / -1;
 }
 
 /* ------------------------------------------------------------- Cómo comprar */
@@ -1912,6 +1983,10 @@ legend {
   max-width: 44em;
 }
 
+.faq-answer p + p {
+  margin-top: 10px;
+}
+
 .faq-points {
   display: grid;
   gap: 8px;
@@ -1954,7 +2029,8 @@ legend {
 .site-footer {
   background: var(--espresso);
   color: rgba(247, 237, 220, 0.82);
-  padding: 56px var(--gutter) calc(28px + env(safe-area-inset-bottom));
+  /* Espacio para que el botón flotante de WhatsApp no tape el pie. */
+  padding: 56px var(--gutter) calc(92px + env(safe-area-inset-bottom));
 }
 
 .footer-grid {
@@ -4050,6 +4126,25 @@ legend {
 }
 
 @media (max-width: 420px) {
+  .site-header {
+    gap: 12px;
+  }
+
+  .brand {
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .brand strong {
+    font-size: 16px;
+  }
+
+  .header-actions {
+    flex: none;
+    gap: 8px;
+  }
+
   .hero h1 {
     font-size: 44px;
   }
@@ -4099,5 +4194,18 @@ legend {
   .tracking-actions,
   .toast-stack {
     display: none !important;
+  }
+}
+
+.cart-line-top .price-pending {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Pantallas muy estrechas (320 px): el logo ya lleva el nombre y el enlace
+   conserva su etiqueta accesible, así que el texto de la marca se oculta. */
+@media (max-width: 360px) {
+  .site-header .brand span {
+    display: none;
   }
 }

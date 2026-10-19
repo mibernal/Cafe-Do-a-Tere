@@ -8,6 +8,7 @@ import { createAdminClient, hasDatabaseConfig } from "@/lib/supabase/admin";
 import { isAdminUser } from "@/lib/admin-auth";
 import { formatCOP } from "@/lib/money";
 import { getStoreReadiness, privacyPolicyVersion, wompiKeysMatchEnvironment } from "@/lib/store-config";
+import { missingLegalItems } from "@/lib/legal";
 import { logoSrc } from "@/lib/site";
 import {
   CatalogManager,
@@ -117,6 +118,7 @@ export default async function AdminPage() {
   const n = (value: unknown) => Number(value ?? 0);
 
   const readiness = getStoreReadiness();
+  const legalMissing = missingLegalItems();
   const sellable = products.reduce(
     (sum, product) => sum + (product.published ? product.variants.filter((v) => v.active && v.priceConfirmed && v.stockOnHand - v.stockReserved > 0).length : 0),
     0,
@@ -124,6 +126,11 @@ export default async function AdminPage() {
   const checklist = [
     { ok: process.env.STORE_CHECKOUT_ENABLED === "true", label: "Pedidos en línea activados", hint: "STORE_CHECKOUT_ENABLED=true" },
     { ok: privacyPolicyVersion() !== null, label: "Política de datos publicada", hint: "PRIVACY_POLICY_VERSION sin la palabra draft" },
+    {
+      ok: legalMissing.length === 0,
+      label: "Datos legales completos",
+      hint: `Faltan ${legalMissing.length}: ${legalMissing.join("; ")}`,
+    },
     { ok: wompiKeysMatchEnvironment(), label: `Llaves Wompi (${process.env.WOMPI_ENVIRONMENT === "production" ? "producción" : "pruebas"})`, hint: "Llaves pública/privada del mismo ambiente" },
     { ok: readiness.codEnabled, label: "Contra entrega", hint: "CASH_ON_DELIVERY_ENABLED=true y ciudades marcadas" },
     { ok: rates.some((rate) => rate.is_active), label: "Ciudades con domicilio", hint: "Agrega al menos una tarifa activa" },

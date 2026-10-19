@@ -8,7 +8,7 @@ import { useStore } from "@/components/store/store-provider";
 export function FloatingActions() {
   const { totalItems, subtotal, openCart, cartOpen } = useStore();
   return (
-    <>
+    <aside aria-label="Accesos rápidos">
       {totalItems > 0 && !cartOpen && (
         <button type="button" className="mobile-bag-bar" onClick={openCart}>
           <ShoppingBag size={18} aria-hidden />
@@ -27,6 +27,6 @@ export function FloatingActions() {
       >
         <MessageCircle size={24} aria-hidden />
       </a>
-    </>
+    </aside>
   );
 }

@@ -1,0 +1,12 @@
+# App completa (con servidor) en Netlify: pagos con Wompi, contra entrega,
+# panel /admin, seguimiento y webhooks. Netlify aplica su adaptador de
+# Next.js (OpenNext) automáticamente. Este archivo no afecta a GitHub Pages,
+# que sigue publicando el sitio estático con .github/workflows/deploy-pages.yml.
+# Pasos y variables: docs/migracion-hosting.md
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"

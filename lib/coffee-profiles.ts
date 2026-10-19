@@ -2,9 +2,29 @@ import type { Product, ProductCategory } from "@/lib/store-types";
 import { methodPhrase } from "@/lib/grind-options";
 
 /**
- * Perfil de taza de cada café en una escala de referencia de 1 a 5. Alimenta
- * la comparación y el asistente "Ayúdame a elegir". Ajusta los valores aquí si
- * la finca catalogó distinto un lote; un café sin perfil usa el de su categoría.
+ * Perfil de taza de cada café en una escala orientativa de 1 a 5, definida
+ * por la finca para comparar sus cafés entre sí. No es una catación
+ * certificada ni un puntaje SCA, y la tienda lo presenta así. Alimenta la
+ * comparación y el asistente "Ayúdame a elegir". Un café sin perfil usa el de
+ * su categoría.
+ *
+ * Cómo se fijaron los valores (fuentes en docs/perfiles-de-taza.md):
+ * - Los tres cafés comparten finca, altura (1.450–1.650 m) y variedades
+ *   (Castillo 60 %, Caturra 40 %). Cenicafé y la prueba ciega de CRS y World
+ *   Coffee Research no encontraron diferencias de calidad entre Castillo y
+ *   Caturra, así que la variedad no separa los cafés: los separan la tostión
+ *   y el proceso de beneficio.
+ * - La variedad sí orienta las notas: el Castillo tiende a fruta no cítrica,
+ *   chocolate oscuro y nueces tostadas; el Caturra, a floral, cacao y
+ *   caramelo. Encaja con las notas que la finca ya describe en cada café.
+ * - Tostión: al oscurecerla baja la acidez y sube el amargor; el dulzor
+ *   apenas cambia y el cuerpo no sigue una línea recta (estudio de la SCA).
+ * - Honey: frente a un lavado, acidez más redonda y menos cítrica, más cuerpo
+ *   y más dulzor.
+ * - Altura: 1.450–1.650 m cerca del ecuador es altura media-alta; da acidez
+ *   presente pero no la más brillante (World Coffee Research ubica el óptimo
+ *   del Caturra por encima de 1.600 m a esta latitud).
+ * Ajusta los valores con la catación de cada lote.
  */
 export type TasteId = "cacao" | "citrico" | "dulce" | "equilibrado";
 export type DrinkId = "negro" | "leche";
@@ -22,6 +42,10 @@ export type CoffeeProfile = {
   methods: string[];
   /** Una línea que dice por qué elegirlo. */
   pitch: string;
+  /** Tipo de tostión, si la finca lo ha confirmado. */
+  roast?: string;
+  /** Proceso de beneficio (lavado, honey, natural), si está confirmado. */
+  postHarvest?: string;
 };
 
 const ESPRESSO = "Espresso · fina";
@@ -34,6 +58,10 @@ const AEROPRESS = "AeroPress · media-fina";
 const COLD = "Cold brew · media-gruesa";
 
 const byProduct: Record<string, CoffeeProfile> = {
+  // Tostión a la leña: la más desarrollada de la casa. Acidez baja (la finca
+  // describe solo "una nota cítrica suave"), cuerpo alto y el amargor
+  // agradable del cacao oscuro; el carácter del Castillo (chocolate oscuro,
+  // nueces) es el que domina. Se sostiene con leche.
   lena: {
     intensity: 5,
     acidity: 2,
@@ -42,27 +70,36 @@ const byProduct: Record<string, CoffeeProfile> = {
     taste: { cacao: 3, equilibrado: 1 },
     milk: 2,
     methods: [ESPRESSO, MOKA, PRESS, ELECTRIC],
-    pitch: "La taza más intensa de la casa: cacao oscuro, frutos secos y un final ahumado.",
+    pitch: "La taza más intensa de la casa: cacao oscuro, frutos secos y el final ahumado de la leña.",
+    roast: "A la leña",
   },
+  // Tostión media: conserva la acidez que da la altura (la más viva de los
+  // tres), con dulzor de panela y chocolate con leche. Cuerpo medio. Es la
+  // mejor opción para métodos de filtro.
   precision: {
     intensity: 3,
     acidity: 4,
     body: 3,
     sweetness: 4,
-    taste: { citrico: 3, equilibrado: 2, dulce: 1 },
+    taste: { citrico: 3, dulce: 2, equilibrado: 2 },
     milk: 1,
     methods: [V60, CHEMEX, AEROPRESS, ELECTRIC],
-    pitch: "Naranja y mandarina con panela, almendra y un final limpio.",
+    pitch: "La más luminosa: naranja y mandarina con dulzor de panela, almendra y chocolate con leche.",
+    roast: "Media",
   },
+  // Honey Red: el mucílago redondea la acidez (media, según la finca), sube el
+  // cuerpo (medio-alto) y da el mayor dulzor de la casa. Menos cítrico que la
+  // tostión de precisión y con un fondo achocolatado.
   "honey-red": {
     intensity: 3,
     acidity: 3,
     body: 4,
     sweetness: 5,
-    taste: { dulce: 3, equilibrado: 2, citrico: 1 },
+    taste: { dulce: 3, equilibrado: 2, cacao: 1 },
     milk: 1,
-    methods: [PRESS, V60, AEROPRESS, COLD],
-    pitch: "Dulce y redondo, de cuerpo medio-alto y acidez media: un microlote para tomar sin afán.",
+    methods: [PRESS, AEROPRESS, V60, COLD],
+    pitch: "La más dulce y redonda: acidez media, cuerpo medio-alto y el dulzor del proceso honey.",
+    postHarvest: "Honey (Red)",
   },
   honey: {
     intensity: 3,
@@ -121,8 +158,8 @@ export function coffeeProfile(product: Pick<Product, "id" | "category">): Coffee
 
 export const tasteOptions: { id: TasteId; label: string; hint: string }[] = [
   { id: "cacao", label: "Chocolate y cacao", hint: "Intenso, con carácter" },
-  { id: "citrico", label: "Cítrico y luminoso", hint: "Naranja, panela, final limpio" },
-  { id: "dulce", label: "Dulce y redondo", hint: "Suave, sin amargor" },
+  { id: "citrico", label: "Cítrico y luminoso", hint: "Naranja, mandarina, final limpio" },
+  { id: "dulce", label: "Dulce y redondo", hint: "Suave, dulce, sin amargor" },
   { id: "equilibrado", label: "Equilibrado", hint: "Para todos los días" },
 ];
 

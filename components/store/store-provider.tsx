@@ -50,7 +50,10 @@ type StoreContextValue = {
   options: CheckoutOptions;
   lines: ResolvedLine[];
   totalItems: number;
+  /** Suma solo de presentaciones con precio confirmado. */
   subtotal: number;
+  /** Unidades en la bolsa cuyo precio aún no está confirmado. */
+  pendingPriceItems: number;
   addItem: (product: Product, variant: ProductVariant, grind: string) => boolean;
   setQuantity: (variantId: string, grind: string, quantity: number) => void;
   removeItem: (variantId: string, grind: string) => void;
@@ -182,11 +185,14 @@ export function StoreProvider({
     [cart, products],
   );
   const totalItems = lines.reduce((sum, line) => sum + line.quantity, 0);
-  const subtotal = lines.reduce((sum, line) => sum + line.variant.priceCop * line.quantity, 0);
+  const confirmedLine = (line: ResolvedLine) => line.variant.priceConfirmed && line.variant.priceCop > 0;
+  const subtotal = lines.reduce((sum, line) => sum + (confirmedLine(line) ? line.variant.priceCop * line.quantity : 0), 0);
+  const pendingPriceItems = lines.reduce((sum, line) => sum + (confirmedLine(line) ? 0 : line.quantity), 0);
 
   const addItem = useCallback(
     (product: Product, variant: ProductVariant, grind: string) => {
-      if (!variant.grinds.includes(grind)) return false;
+      // Nunca se agrega un café sin una molienda elegida y válida.
+      if (!grind || !variant.grinds.includes(grind)) return false;
       if (options.ordersEnabled && !isPurchasable(variant)) return false;
       const existing = cart.find((line) => line.variantId === variant.id && line.grind === grind);
       if (existing && existing.quantity >= MAX_UNITS_PER_LINE) {
@@ -258,6 +264,7 @@ export function StoreProvider({
     lines,
     totalItems,
     subtotal,
+    pendingPriceItems,
     addItem,
     setQuantity,
     removeItem,

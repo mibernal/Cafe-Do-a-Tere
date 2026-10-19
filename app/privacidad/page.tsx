@@ -4,19 +4,36 @@ import { PolicyLayout } from "@/components/policy-layout";
 import { site, whatsappLink } from "@/lib/site";
 import { renderPerRequest } from "@/lib/request-time";
 import { isStaticSite } from "@/lib/site-target";
+import { legalComplete } from "@/lib/legal";
+import { LegalValue, Pending } from "@/components/legal-pending";
 
-export const metadata: Metadata = { title: "Tratamiento de datos personales" };
+export function generateMetadata(): Metadata {
+  return {
+    title: "Tratamiento de datos personales",
+    description: "Cómo Café Doña Tere trata los datos personales de quienes hacen pedidos, y cómo ejercer tus derechos.",
+    alternates: { canonical: isStaticSite ? "/privacidad/" : "/privacidad" },
+    robots: legalComplete() ? { index: true, follow: true } : { index: false, follow: true },
+  };
+}
+
 export default async function PrivacyPage() {
   await renderPerRequest();
   return (
     <PolicyLayout
       title="Tratamiento de datos personales"
-      draftNote="Borrador para completar por el responsable del comercio antes de habilitar pedidos (Ley 1581 de 2012 y Decreto 1377 de 2013). Los campos entre corchetes deben reemplazarse con la información real."
+      draftNote={
+        legalComplete()
+          ? undefined
+          : "Borrador en revisión. Los datos marcados como pendientes los debe completar el responsable del comercio, y el texto debe validarlo un asesor (Ley 1581 de 2012 y Decreto 1377 de 2013). Este documento no es definitivo."
+      }
     >
       <section>
         <h2>Responsable</h2>
         <p>
-          [MIGUEL ANGEL BERNAL], identificado con NIT o cédula [1069583873], con domicilio en [CRA 92 72A 69,bogota] y correo de contacto [miguelangelbernal1991@gmail.com]. Canal de atención por WhatsApp: {site.whatsappDisplay}.
+          <LegalValue field="BUSINESS_LEGAL_NAME" label="razón social o nombre del responsable" />, identificado con NIT o
+          cédula <LegalValue field="BUSINESS_TAX_ID" label="número" />, con domicilio en{" "}
+          <LegalValue field="BUSINESS_ADDRESS" label="dirección y municipio" /> y correo de contacto{" "}
+          <LegalValue field="BUSINESS_LEGAL_EMAIL" label="correo" />. Canal de atención por WhatsApp: {site.whatsappDisplay}.
         </p>
       </section>
       <section>
@@ -54,7 +71,7 @@ export default async function PrivacyPage() {
       <section>
         <h2>Quién más los procesa</h2>
         <p>
-          [Completar con los encargados reales.] Por ejemplo:{" "}
+          <Pending>completar con los encargados reales</Pending> Por ejemplo:{" "}
           {isStaticSite
             ? "WhatsApp (Meta), por donde nos llega el pedido, y la empresa de mensajería que lo entrega."
             : "el proveedor de base de datos y alojamiento de la tienda, la pasarela de pagos Wompi y la empresa de mensajería que entrega el pedido."}
@@ -62,13 +79,15 @@ export default async function PrivacyPage() {
       </section>
       <section>
         <h2>Cuánto tiempo los conservamos</h2>
-        <p>[5 años.] El tiempo necesario para la entrega, la garantía y las obligaciones contables y tributarias.</p>
+        <p>
+          Cinco años: el tiempo necesario para la entrega, la garantía y las obligaciones contables y tributarias.
+        </p>
       </section>
       <section>
         <h2>Tus derechos</h2>
         <p>
           Puedes conocer, actualizar, rectificar y solicitar la supresión de tus datos, revocar la autorización y
-          presentar quejas ante la Superintendencia de Industria y Comercio. Escríbenos a [correo] o por{" "}
+          presentar quejas ante la Superintendencia de Industria y Comercio. Escríbenos a <LegalValue field="BUSINESS_LEGAL_EMAIL" label="correo" /> o por{" "}
           <a href={whatsappLink("Hola, quiero hacer una solicitud sobre mis datos personales.")} target="_blank" rel="noopener noreferrer">
             WhatsApp
           </a>{" "}

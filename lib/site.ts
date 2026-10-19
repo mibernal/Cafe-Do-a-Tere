@@ -15,6 +15,13 @@ export const site = {
   town: "Cachipay",
   region: "Cundinamarca",
   altitude: "1.450–1.650 m s. n. m.",
+  species: "Arábica",
+  grade: "Excelso",
+  /** Variedades botánicas de la finca, confirmadas por el comercio. */
+  varieties: [
+    { name: "Castillo", share: 60 },
+    { name: "Caturra", share: 40 },
+  ],
   whatsappNumber,
   whatsappDisplay: whatsappNumber.startsWith("57") && whatsappNumber.length === 12
     ? `+57 ${whatsappNumber.slice(2, 5)} ${whatsappNumber.slice(5, 8)} ${whatsappNumber.slice(8)}`
@@ -22,6 +29,20 @@ export const site = {
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "",
   instagramUrl: process.env.NEXT_PUBLIC_INSTAGRAM_URL || "",
 } as const;
+
+/** "Castillo 60% · Caturra 40%" */
+export const varietiesLabel = site.varieties.map((variety) => `${variety.name} ${variety.share}%`).join(" · ");
+
+/** "60% Castillo y 40% Caturra" */
+export const varietiesPhrase = site.varieties
+  .map((variety) => `${variety.share}%\u00a0${variety.name}`)
+  .join(", ")
+  .replace(/, ([^,]*)$/, " y $1");
+
+/** Evita que "m s. n. m." quede partido entre dos líneas. */
+export function altitudeText(altitude: string) {
+  return altitude.replace(/m s\. n\. m\./g, "m\u00a0s.\u00a0n.\u00a0m.");
+}
 
 export function whatsappLink(message?: string) {
   const base = `https://wa.me/${site.whatsappNumber}`;

@@ -49,7 +49,7 @@ export function CoffeeCompare() {
       <div className="section-shell">
         <div className="compare-intro">
           <h2 id="compare-title">{countCoffees(products.length)}, lado a lado</h2>
-          <p>Así se diferencian en la taza, en una escala de referencia de 1 a 5. Toca uno para verlo en el catálogo.</p>
+          <p>Todos vienen de la misma finca, a la misma altura y con las mismas variedades; los distinguen el proceso y la tostión. La escala de 1 a 5 es orientativa, hecha por la finca para comparar sus cafés (no es una catación certificada). Toca uno para verlo en el catálogo.</p>
         </div>
         <div className="compare-scroll" role="region" aria-label="Tabla comparativa de los cafés" tabIndex={0}>
           <table className="compare-table" style={{ "--compare-cols": products.length } as React.CSSProperties}>

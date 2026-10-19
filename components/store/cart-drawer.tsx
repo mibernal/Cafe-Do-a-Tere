@@ -26,12 +26,23 @@ type CheckoutResult = {
 
 const WOMPI_METHODS = ["Tarjeta débito o crédito", "PSE", "Nequi", "Botón Bancolombia", "Efectivo en corresponsal"];
 
-function whatsappOrderMessage(lines: ResolvedLine[], subtotal: number) {
+function linePrice(line: ResolvedLine) {
+  return line.variant.priceConfirmed && line.variant.priceCop > 0 ? line.variant.priceCop * line.quantity : null;
+}
+
+/** Mensaje de WhatsApp con el detalle de la bolsa. Solo incluye precios confirmados. */
+function whatsappOrderMessage(lines: ResolvedLine[], subtotal: number, pendingPriceItems: number) {
   const items = lines
-    .map((line) => `• ${line.quantity} × ${line.product.name}, ${line.variant.label}, ${grindPhrase(line.grind)}`)
+    .map((line) => {
+      const price = linePrice(line);
+      return `• ${line.quantity} × ${line.product.name}, ${line.variant.label}, ${grindPhrase(line.grind)}: ${price === null ? "precio por confirmar" : formatCOP(price)}`;
+    })
     .join("\n");
-  const total = subtotal > 0 ? `\nSubtotal de referencia: ${formatCOP(subtotal)}` : "";
-  return `Hola, Café Doña Tere. Quiero hacer este pedido:\n${items}${total}\n\nMi ciudad de entrega es: `;
+  const totals = [
+    subtotal > 0 ? `Subtotal de precios confirmados: ${formatCOP(subtotal)}` : "",
+    pendingPriceItems > 0 ? `Por confirmar: ${pendingPriceItems === 1 ? "1 café" : `${pendingPriceItems} cafés`}.` : "",
+  ].filter(Boolean);
+  return `Hola, Café Doña Tere. Quiero hacer este pedido:\n${items}${totals.length ? `\n${totals.join("\n")}` : ""}\n\nMi ciudad de entrega es: `;
 }
 
 export function CartDrawer() {
@@ -39,6 +50,7 @@ export function CartDrawer() {
     lines,
     totalItems,
     subtotal,
+    pendingPriceItems,
     cartOpen,
     closeCart,
     options,
@@ -287,7 +299,11 @@ export function CartDrawer() {
               <ShoppingBag size={24} />
             </span>
             <h3>Tu bolsa está vacía</h3>
-            <p>Elige un café de la finca y la molienda para tu método.</p>
+            <p>
+              {onlineCheckout
+                ? "Elige un café de la finca y la molienda para tu método."
+                : "Elige café, presentación y molienda. Cuando tengas tu bolsa, la envías por WhatsApp y confirmamos el pedido contigo."}
+            </p>
             <button
               type="button"
               className="button button-primary"
@@ -314,7 +330,9 @@ export function CartDrawer() {
                       <div className="cart-line-body">
                         <div className="cart-line-top">
                           <b>{line.product.name}</b>
-                          <span>{line.variant.priceCop > 0 ? formatCOP(line.variant.priceCop * line.quantity) : "Por confirmar"}</span>
+                          <span className={linePrice(line) === null ? "price-pending" : undefined}>
+                            {linePrice(line) === null ? "Precio por confirmar" : formatCOP(linePrice(line)!)}
+                          </span>
                         </div>
                         <small>
                           {line.variant.label}, {grindPhrase(line.grind)}
@@ -352,9 +370,14 @@ export function CartDrawer() {
             </div>
             <footer className="drawer-foot">
               <div className="foot-row">
-                <span>{lines.some((line) => !line.variant.priceConfirmed) ? "Subtotal de referencia" : "Subtotal"}</span>
+                <span>{subtotal === 0 ? "Total" : pendingPriceItems > 0 ? "Subtotal confirmado" : "Subtotal"}</span>
                 <b>{subtotal > 0 ? formatCOP(subtotal) : "Por confirmar"}</b>
               </div>
+              {pendingPriceItems > 0 && subtotal > 0 && (
+                <p className="foot-note">
+                  {pendingPriceItems === 1 ? "1 café tiene" : `${pendingPriceItems} cafés tienen`} el precio por confirmar.
+                </p>
+              )}
               {onlineCheckout ? (
                 <>
                   <p className="foot-note">El domicilio se suma según tu ciudad en el siguiente paso.</p>
@@ -376,11 +399,12 @@ export function CartDrawer() {
               ) : (
                 <>
                   <p className="foot-note">
-                    Te confirmamos precio, domicilio y forma de pago por WhatsApp antes de cobrar.
+                    Esta página no cobra. Al enviar tu bolsa por WhatsApp te confirmamos precio, disponibilidad,
+                    domicilio y forma de pago.
                   </p>
                   <a
                     className="button button-primary button-block"
-                    href={whatsappLink(whatsappOrderMessage(lines, subtotal))}
+                    href={whatsappLink(whatsappOrderMessage(lines, subtotal, pendingPriceItems))}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -459,7 +483,7 @@ export function CartDrawer() {
                   {zone?.etaLabel && <small className="field-hint">Llega en {zone.etaLabel.toLowerCase()}.</small>}
                   <small className="field-hint">
                     ¿No ves tu ciudad?{" "}
-                    <a href={whatsappLink(whatsappOrderMessage(lines, subtotal))} target="_blank" rel="noopener noreferrer">
+                    <a href={whatsappLink(whatsappOrderMessage(lines, subtotal, pendingPriceItems))} target="_blank" rel="noopener noreferrer">
                       Escríbenos y cotizamos el envío
                     </a>
                     .
